@@ -1,0 +1,4 @@
+region = valid_region
+host = valid_host
+debug = false
+whitelist_pass_through = false

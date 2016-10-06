@@ -1,0 +1,6 @@
+# comment 1
+credentials_path = ./test/config_files/ valid_credentials_file
+
+#comment 2
+region = valid_region
+host = valid_host

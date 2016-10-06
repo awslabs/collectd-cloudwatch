@@ -1,0 +1,3 @@
+region = valid_region
+unknown = invalid_parameter
+host = valid_host
