@@ -1,3 +1,4 @@
+import sys
 import unittest
 from subprocess import CalledProcessError
 
@@ -98,21 +99,22 @@ class CommandTest(unittest.TestCase):
 class InstallationTest(unittest.TestCase):
     PYTHON_MODULES = ["invalid_module1", "invalid_module2"]
 
+    @patch("src.setup.detect_pip")
     @patch("src.setup.Command")
-    def test_install_python_packages_uses_pip_first(self, command_mock):
+    def test_install_python_packages_uses_pip_first(self, command_mock, detect_pip_mock):
         installer.detect_pip = Mock()
-        installer.detect_pip.return_value = "pip"
+        installer.detect_pip.return_value = None
         command_mock.return_value = Mock()
         installer.install_python_packages(self.PYTHON_MODULES)
-        command_mock.assert_called_with("pip install --quiet --upgrade --force-reinstall " + " ".join(self.PYTHON_MODULES), 'Installing python dependencies', exit_on_failure=True)
+        command_mock.assert_called_with(sys.executable + " -m pip install --quiet --upgrade --force-reinstall " + " ".join(self.PYTHON_MODULES), 'Installing python dependencies', exit_on_failure=True)
 
+    @patch("src.setup.detect_pip")
     @patch("src.setup.Command")
-    def test_install_python_packages_uses_easy_install_when_pip_is_not_available(self, command_mock):
-        installer.detect_pip = Mock()
-        installer.detect_pip.side_effect = CalledProcessError(cmd="which python-pip", returncode=1)
+    def test_install_python_packages_uses_easy_install_when_pip_is_not_available(self, command_mock, detect_pip_mock):
+        detect_pip_mock.side_effect = CalledProcessError(cmd="{} -m pip".format(sys.executable), returncode=1)
         command_mock.return_value = Mock()
         installer.install_python_packages(self.PYTHON_MODULES)
-        command_mock.assert_called_with("easy_install -U --quiet " + " ".join(self.PYTHON_MODULES), "Installing python dependencies", exit_on_failure=True)
+        command_mock.assert_called_with(sys.executable + " -m easy_install -U --quiet " + " ".join(self.PYTHON_MODULES), "Installing python dependencies", exit_on_failure=True)
 
 
 class ColorTest(unittest.TestCase):
