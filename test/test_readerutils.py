@@ -20,8 +20,9 @@ class ReaderUtilsTest(unittest.TestCase):
     VALID_SECRET_KEY_STRING = "valid_secret_key"
     VALID_REGION_STRING = "valid_region"
     VALID_HOST_STRING = "valid_host"
-    VALID_CREDENTIALS_PATH_STRING = "./test/config_files/valid_credentials_file"
-    
+    VALID_CREDENTIALS_PATH_STRING = CONFIG_DIR + "valid_credentials_file"
+    CONFIG_WITH_SECTION = CONFIG_DIR + "config_with_section"
+
     def setUp(self):
         self.logger = MagicMock()
         self.logger.error = Mock()
@@ -35,7 +36,7 @@ class ReaderUtilsTest(unittest.TestCase):
         self.assertEquals(self.VALID_REGION_STRING, region)
         self.assertEquals(self.VALID_HOST_STRING, host)
         self.assertEquals(self.VALID_CREDENTIALS_PATH_STRING, credentials_path)
-        
+
     def test_get_string_with_quotes(self):
         reader = ReaderUtils(self.VALID_CONFIG_FULL_QUOTED)
         region = reader.get_string("region")
@@ -44,7 +45,7 @@ class ReaderUtilsTest(unittest.TestCase):
         self.assertEquals(self.VALID_REGION_STRING, region)
         self.assertEquals(self.VALID_HOST_STRING, host)
         self.assertEquals(self.VALID_CREDENTIALS_PATH_STRING, credentials_path)
-        
+
     def test_get_boolean(self):
         reader = ReaderUtils(self.VALID_CONFIG_WITH_DEBUG_DISABLED)
         self.assertEquals(False, reader.get_boolean("debug"))
@@ -67,21 +68,21 @@ class ReaderUtilsTest(unittest.TestCase):
         reader = ReaderUtils(self.INVALID_CONFIG_WITH_DEBUG)
         with self.assertRaises(ValueError):
             reader.get_boolean("debug")
-    
+
     def test_whitespaces_are_stripped_correctly(self):
         reader = ReaderUtils(self.VALID_CONFIG_WITH_WHITE_SPACES)
         region = reader.get_string("region")
         host = reader.get_string("host")
         self.assertEquals(self.VALID_REGION_STRING, region)
         self.assertEquals(self.VALID_HOST_STRING, host)
-        
+
     def test_configuration_with_comments(self):
         reader = ReaderUtils(self.VALID_CONFIG_WITH_COMMENTS)
         region = reader.get_string("region")
         host = reader.get_string("host")
         self.assertEquals(self.VALID_REGION_STRING, region)
         self.assertEquals(self.VALID_HOST_STRING, host)
-        
+
     def test_strip_quotes(self):
         reader = ReaderUtils(self.VALID_CONFIG_FULL)
         result = reader._strip_quotes("'string'")
@@ -100,7 +101,7 @@ class ReaderUtilsTest(unittest.TestCase):
         self.assertEquals("string7", result)
         result = reader._strip_quotes("string8\"")
         self.assertEquals("string8", result)
-    
+
     def test_valid_real_config(self):
         reader = ReaderUtils(self.VALID_REAL_CONFIG)
         region = reader.get_string("region")
@@ -111,13 +112,18 @@ class ReaderUtilsTest(unittest.TestCase):
         self.assertEquals("/home/user/.aws/credentials", credentials_path)
         debug = reader.get_boolean("debug")
         self.assertEquals(False, debug)
-        
+
     def test_parse_missing_config(self):
         with self.assertRaises(IOError):
             ReaderUtils(self.MISSING_CONFIG)
-    
+
     def test_parse_config_with_invalid_syntax(self):
         reader = ReaderUtils(self.INVALID_CONFIG_WITH_SYNTAX_ERROR)
         with self.assertRaises(ValueError):
             reader.get_string("region")
         self.assertTrue(self.logger.error.called)
+
+    def test_ignore_section_in_config(self):
+        reader = ReaderUtils(self.CONFIG_WITH_SECTION)
+        value = reader.get_string("key")
+        self.assertEquals("value", value)
