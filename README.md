@@ -14,7 +14,7 @@ sudo ./setup.py
 ## Configuration
 
 ### Plugin specific configuration
-The default location of the configuration file used by collectd-cloudwatch plugin is: `/opt/collectd-plugins/cloudwatch/config`.  The parameters in this file are optional when plugin is executed on EC2 instance. This file allows modification of the following parameters:
+The default location of the configuration file used by collectd-cloudwatch plugin is: `/opt/collectd-plugins/cloudwatch/config/plugin.conf`.  The parameters in this file are optional when plugin is executed on EC2 instance. This file allows modification of the following parameters:
  * __credentials_path__ - Used to point to AWS account configuration file
  * __region__ - Manual override for [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#cw_region)  used to publish metrics
  * __host__ - Manual override for EC2 Instance ID and Host information propagated by collectd
