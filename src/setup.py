@@ -257,8 +257,9 @@ def install_packages(packages):
 def detect_linux_distribution():
     search_string = ""
     for release_file in glob("/etc/*-release"):
-        with open(release_file) as fd:
-            search_string += fd.read()
+        if os.path.isfile(release_file):
+            with open(release_file) as fd:
+                search_string += fd.read()
     return DISTRO_NAME_REGEX.search(search_string).group(1).strip()
 
 
