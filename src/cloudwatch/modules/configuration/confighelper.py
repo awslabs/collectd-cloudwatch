@@ -123,6 +123,8 @@ class ConfigHelper(object):
         """ Creates endpoint from region information """
         if self.region is "localhost":
             self.endpoint = "http://" + self.region + "/"
+        elif self.region.startswith("cn-"):
+            self.endpoint = "https://monitoring." + self.region + ".amazonaws.com.cn/"
         else:
             self.endpoint = "https://monitoring." + self.region + ".amazonaws.com/"
             
