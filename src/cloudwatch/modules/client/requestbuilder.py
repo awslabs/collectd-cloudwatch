@@ -85,4 +85,6 @@ class RequestBuilder(object):
         """ Returns the endpoint's hostname derived from the region """
         if self.region == "localhost":
             return "localhost"
+        elif self.region.startswith("cn-"):
+            return "monitoring." + self.region + ".amazonaws.com.cn"
         return "monitoring." + self.region + ".amazonaws.com"
