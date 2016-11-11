@@ -34,6 +34,50 @@ class FlusherTest(unittest.TestCase):
         self.client = MagicMock()
         self.client.put_metric_data = Mock()
 
+    def test_is_numerical_value(self):
+        self.assertFalse(self.flusher.is_numerical_value(float('nan')))
+        self.assertTrue(self.flusher.is_numerical_value(2))
+        self.assertTrue(self.flusher.is_numerical_value(2.01))
+        self.assertTrue(self.flusher.is_numerical_value("+1.2"))
+        self.assertTrue(self.flusher.is_numerical_value("-1.2"))
+        self.assertTrue(self.flusher.is_numerical_value("1.2"))
+        self.assertTrue(self.flusher.is_numerical_value("1"))
+        self.assertTrue(self.flusher.is_numerical_value("0.211"))
+        self.assertTrue(self.flusher.is_numerical_value(".211"))
+        self.assertFalse(self.flusher.is_numerical_value("@.211"))
+        self.assertFalse(self.flusher.is_numerical_value("2.("))
+
+    def test_numerical_value(self):
+        key = self.add_value_list("plugin", "plugin_instance_0", "type", "type_instance", "host", [float('nan')])
+        self.assertFalse(key in self.flusher.metric_map)
+        self.assertFalse(not key in self.flusher.nan_key_set)
+        key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", [10])
+        self.assertTrue(key in self.flusher.metric_map)
+        self.assertFalse(key in self.flusher.nan_key_set)
+        key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", [10])
+        self.assertTrue(key in self.flusher.metric_map)
+        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 20)
+        key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", ["20aaa"])
+        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 20)
+        self.assertTrue(key in self.flusher.nan_key_set)
+        key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", [-20])
+        self.assertTrue(key in self.flusher.metric_map)
+        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 0)
+        key = self.add_value_list("plugin", "plugin_instance_2", "type", "type_instance", "host", [10,"20aaa"])
+        self.assertTrue( key in self.flusher.metric_map)
+        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 10)
+        self.assertTrue(key in self.flusher.nan_key_set)
+        key = self.add_value_list("plugin", "plugin_instance_2", "type", "type_instance", "host", ["20aaa", 10])
+        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 20)
+        self.assertTrue(key in self.flusher.metric_map)
+        self.assertTrue(key in self.flusher.nan_key_set)
+        key = self.add_value_list("plugin", "plugin_instance_3", "type", "type_instance", "host", ["20aaa"])
+        self.assertFalse(key in self.flusher.metric_map)
+        self.assertTrue(key in self.flusher.nan_key_set)
+        key = self.add_value_list("plugin", "plugin_instance_4", "type", "type_instance", "host", [20.22])
+        self.assertTrue(key in self.flusher.metric_map)
+        self.assertFalse(key in self.flusher.nan_key_set)
+
     def test_flushes_before_adding_metrics(self):
         self.flusher._FLUSH_INTERVAL_IN_SECONDS = 0
         vl = self._get_vl_mock("CPU", "0", "CPU", "Steal", values=(50, 100, 200))
@@ -168,7 +212,13 @@ class FlusherTest(unittest.TestCase):
             return open(FakeServer.REQUEST_FILE).read()[2:]  # trim '/?' from the request 
         except:
             return None
-    
+
+    def add_value_list(self, plugin, plugin_instance, type, type_instance, host="MockHost", values=[]):
+        vl = self._get_vl_mock(plugin, plugin_instance, type, type_instance, host, values)
+        self.flusher._aggregate_metric(vl)
+        key = self.flusher._get_metric_key(vl)
+        return key
+
     @classmethod
     def tearDownClass(cls):    
         cls.FAKE_SERVER.stop_server()

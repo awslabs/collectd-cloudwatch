@@ -1,6 +1,7 @@
 import threading
 import time
 import os
+import math
 
 from client.putclient import PutClient
 from logger.logger import get_logger
@@ -27,6 +28,21 @@ class Flusher(object):
         self.config = config_helper
         self.metric_map = {}
         self.last_flush_time = time.time()
+        self.nan_key_set = set()
+
+    def is_numerical_value(self, value):
+        """
+        Assume that the value from collectd to this plugin is float or Integer, if string transfer from collectd to this interface,
+        we should modify the method  _add_values_to_metric, to convert the string type value to float type value.
+
+        Returns:
+            True if the value is float and is not nan
+            False if the value is nan
+        """
+        try:
+            return not math.isnan(float(value))
+        except ValueError:
+            return False
 
     def add_metric(self, value_list):
         """
@@ -57,36 +73,55 @@ class Flusher(object):
     
     def _is_flush_time(self, current_time):
         return (current_time - self.last_flush_time) + self._FLUSH_DELTA_IN_SECONDS >= self._FLUSH_INTERVAL_IN_SECONDS
-    
+
+    def record_nan_value(self, key, value_list):
+        if not key in self.nan_key_set:
+            self._LOGGER.warning(
+                "Adding Metric value is not numerical, key: " + key + " value: " + str(value_list.values))
+            self.nan_key_set.add(key)
+
     def _aggregate_metric(self, value_list):
         """
         Selects existing metric or adds a new metric to the metric_map. Then aggregates values from ValueList with the selected metric.
         If the size of metric_map is above the limit, new metric will not be added and the value_list will be dropped.
         """
+        nan_value_count = 0
         key = self._get_metric_key(value_list)
         if key in self.metric_map:
-            self._add_values_to_metric(self.metric_map[key], value_list)
+            nan_value_count = self._add_values_to_metric(self.metric_map[key], value_list)
         else:
             if len(self.metric_map) < self._MAX_METRICS_TO_AGGREGATE:
                 metric = MetricDataBuilder(self.config, value_list).build()
-                self.metric_map[key] = metric
-                self._add_values_to_metric(metric, value_list)
+                nan_value_count = self._add_values_to_metric(metric, value_list)
+                if nan_value_count != len(value_list.values):
+                    self.metric_map[key] = metric
             else:
                 self._LOGGER.warning("Batching queue overflow detected. Dropping metric.")
-            
+        if nan_value_count:
+            self.record_nan_value(key, value_list)
+
     def _get_metric_key(self, value_list):
         """
         Generates key for the metric. The key must use both metric_name and plugin instance to ensure uniqueness.
         """ 
         return value_list.plugin + "-" + value_list.plugin_instance + "-" + value_list.type + "-" +value_list.type_instance
-    
+
     def _add_values_to_metric(self, metric, value_list):
         """
         Aggregates values from value_list with existing metric
+        Add the valid value to the metric and just skip the nan value.
+
+        Returns:
+            return the count of the nan value in value_list
         """
+        nan_value_count = 0
         for value in value_list.values:
-            metric.add_value(value)
-    
+            if self.is_numerical_value(value):
+                metric.add_value(value)
+            else:
+                nan_value_count += 1
+        return nan_value_count
+
     def _flush(self):
         """
         Batches and puts metrics to CloudWatch
