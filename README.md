@@ -78,7 +78,7 @@ LoadPlugin logfile
 
 <Plugin logfile>
        LogLevel info
-       File /var/log/collectd.log
+       File "/var/log/collectd.log"
        Timestamp true
        PrintSeverity false
 </Plugin>
