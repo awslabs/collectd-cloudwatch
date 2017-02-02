@@ -36,6 +36,7 @@ class ConfigHelper(object):
         self.region = ''
         self.endpoint = ''
         self.host = ''
+        self.proxy_server_name = ''
         self.debug = False
         self.pass_through = False
         self._load_configuration()
@@ -66,6 +67,7 @@ class ConfigHelper(object):
         self._load_credentials()
         self._load_region()
         self._load_hostname()
+        self._load_proxy_server_name()
         # TODO: implement Auto Scaling Group
         self._set_endpoint()
         self.debug = self.config_reader.debug
@@ -118,6 +120,16 @@ class ConfigHelper(object):
             except Exception as e:
                 ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) +  
                     " Using host information provided by Collectd.")
+
+    def _load_proxy_server_name(self):
+        """
+        Load proxy server name from the configuration file, if configuration file does not contain proxy entry
+        then set proxy to None.
+        """
+        if self.config_reader.proxy_server_name:
+            self.proxy_server_name = self.config_reader.proxy_server_name
+        else:
+            self.proxy_server_name = None
 
     def _set_endpoint(self):
         """ Creates endpoint from region information """
