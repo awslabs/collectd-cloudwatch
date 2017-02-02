@@ -18,6 +18,7 @@ The default location of the configuration file used by collectd-cloudwatch plugi
  * __credentials_path__ - Used to point to AWS account configuration file
  * __region__ - Manual override for [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#cw_region)  used to publish metrics
  * __host__ - Manual override for EC2 Instance ID and Host information propagated by collectd
+ * __proxy_server_name__ - Manual override for proxy server, used by plugin to connect aws cloudwatch at *.amazonaws.com.
  * __whitelist_pass_through__ - Used to enable potentially unsafe regular expressions. By default regex such as a line containing `.*` or `.+` only is automatically disabled in the whitelist configuration.
   Setting this value to True may result in a large number of metrics being published. Before changing this parameter, read [pricing information](https://aws.amazon.com/cloudwatch/pricing/) to understand how to estimate your bill.
  * __debug__ - Provides verbose logging of metrics emitted to CloudWatch
@@ -29,6 +30,7 @@ region = "us-west-1"
 host = "Server1"
 whitelist_pass_through = False
 debug = False
+proxy_server_name = "http://myproxyserver.com:8080"
 ```
 
 ### AWS account configuration
