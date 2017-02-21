@@ -23,6 +23,9 @@ class CredentialsReader(object):
     _ACCESS_CONFIG_KEY = "aws_access_key"
     _SECRET_CONFIG_KEY = "aws_secret_key"
 
+    _ACCESS_CONFIG_KEY_AWS_FORMAT = "aws_access_key_id"
+    _SECRET_CONFIG_KEY_AWS_FORMAT = "aws_secret_access_key"
+
     def __init__(self, creds_path):
         self.creds_path = creds_path
         self.credentials = None
@@ -39,8 +42,8 @@ class CredentialsReader(object):
         This method retrieves values form preprocessed configuration list 
         in format ['key=value', 'key2=value2'] 
         """
-        access_key = self.reader_utils.get_string(self._ACCESS_CONFIG_KEY)
-        secret_key = self.reader_utils.get_string(self._SECRET_CONFIG_KEY)
+        access_key = self.reader_utils.get_string(self._ACCESS_CONFIG_KEY) || self.reader_utils.get_string(self._ACCESS_CONFIG_KEY_AWS_FORMAT)
+        secret_key = self.reader_utils.get_string(self._SECRET_CONFIG_KEY) || self.reader_utils.get_string(self._SECRET_CONFIG_KEY_AWS_FORMAT)
         if not access_key or not secret_key:
             raise CredentialsReaderException("Access key or secret key is missing in the credentials file.")
         if access_key and secret_key:
