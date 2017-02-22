@@ -4,12 +4,14 @@ from querystringbuilder import QuerystringBuilder
 
 class BaseRequestBuilder(object):
     """
-    The request builder is responsible for building the PutMetricData requests using HTTP GET. 
+    The base request builder is just the in common things a request builder needs
     
     Keyword arguments:
     credentials -- The AWSCredentials object containing access and secret keys
-    region -- The region to which the data should be published
-    namespace -- The namespace used for grouping of the published metrics.    
+    region -- The region to which we're targeting
+    service -- The AWS Service API name
+    action -- The action we'll be calling
+    api_version -- The AWS specified API version.
     """
 
     _ALGORITHM = "AWS4-HMAC-SHA256"

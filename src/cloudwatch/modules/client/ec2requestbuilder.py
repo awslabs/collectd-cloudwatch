@@ -5,12 +5,11 @@ from baserequestbuilder import BaseRequestBuilder
 
 class EC2RequestBuilder(BaseRequestBuilder):
     """
-    The request builder is responsible for building the PutMetricData requests using HTTP GET. 
+    The request builder is responsible for building the DescribeTags requests using HTTP GET. 
     
     Keyword arguments:
     credentials -- The AWSCredentials object containing access and secret keys
-    region -- The region to which the data should be published
-    namespace -- The namespace used for grouping of the published metrics.    
+    region -- The region to which the data should be fetched
     """
     _SERVICE = "ec2"
     _ACTION = "DescribeTags"

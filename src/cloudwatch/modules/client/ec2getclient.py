@@ -12,13 +12,10 @@ from querystringbuilder import QuerystringBuilder
 
 class EC2GetClient(object):
     """
-    This is a simple HTTPClient wrapper which supports putMetricData operation on CloudWatch endpoints. 
+    This is a simple HTTPClient wrapper which supports DescribeTags operation on EC2 endpoints. 
     
     Keyword arguments:
-    region -- the region used for request signing.
-    endpoint -- the endpoint used for publishing metric data
-    credentials -- the AWSCredentials object containing access_key, secret_key or 
-                IAM Role token used for request signing
+    config_helper -- the helper that holds our configuration
     connection_timeout -- the amount of time in seconds to wait for extablishing server connection
     response_timeout -- the amount of time in seconds to wait for the server response 
     """
@@ -44,9 +41,7 @@ class EC2GetClient(object):
         
     def get_autoscaling_group(self, instanceId):
         """
-        Publishes metric data to the endpoint with single namespace defined. 
-        It is consumers responsibility to ensure that all metrics in the metric list 
-        belong to the same namespace.
+        Fetches the autoscaling group name from EC2. Defatuls to NONE if an error occours
         """
         request_map = {}
         request_map["Filter.1.Name"] = "key"
@@ -62,6 +57,7 @@ class EC2GetClient(object):
         except Exception as e:
             self._LOGGER.warning("Could not get the autoscalig group name using the following endpoint: '" + self.endpoint +"'. [Exception: " + str(e) + "]")
             self._LOGGER.warning("Request details: '" + request + "'")
+            return "NONE"
 
     def _run_request(self, request):
         """
