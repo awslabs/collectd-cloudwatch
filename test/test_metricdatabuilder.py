@@ -29,10 +29,10 @@ class MetricDataBuilderTest(unittest.TestCase):
     def test_build(self):
         vl = self._get_vl_mock("CPU", "0", "CPU", "Steal")
         metric = MetricDataBuilder(self.config_helper, vl).build()
-        self.assertEquals(None, metric.statistics)
-        self.assertEquals("CPU.CPU.Steal", metric.metric_name)
-        self.assertEquals("valid_host", metric.dimensions['Host'])
-        self.assertEquals("0", metric.dimensions['PluginInstance'])
+        self.assertEquals(None, metric[0].statistics)
+        self.assertEquals("CPU.CPU.Steal", metric[0].metric_name)
+        self.assertEquals("valid_host", metric[0].dimensions['Host'])
+        self.assertEquals("0", metric[0].dimensions['PluginInstance'])
     
     def test_build_metric_name_with_all_name_parts(self):
         vl = self._get_vl_mock("CPU", "0", "CPU", "Steal")
