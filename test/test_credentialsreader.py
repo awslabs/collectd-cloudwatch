@@ -8,6 +8,7 @@ class CredentialsReaderTest(unittest.TestCase):
     VALID_CREDENTIALS_FILE = CONFIG_DIR + "valid_credentials_file"
     VALID_CREDENTIALS_FILE_AWS_FORMAT = CONFIG_DIR + "valid_credentials_file_aws_format"
     VALID_CREDENTIALS_FILE_AWS_FORMAT_MIXED = CONFIG_DIR + "valid_credentials_file_aws_format_mixed"
+    VALID_CREDENTIALS_FILE_AWS_FORMAT_PROFILE_PRESENT = CONFIG_DIR + "valid_credentials_file_aws_format_profile_present"
     VALID_CREDENTIALS_FILE_WITH_WHITESPACES = CONFIG_DIR + "valid_credentials_file_with_whitespaces"
     INVALID_CREDENTIALS_FILE_WITH_UNKNOWN_PARAMETER = CONFIG_DIR + "invalid_credentials_file_with_unknown_parameters"
     INVALID_CREDENTIALS_FILE_WITH_SYNTAX_ERROR = CONFIG_DIR + "invalid_credentials_file_with_syntax_error"
@@ -37,6 +38,10 @@ class CredentialsReaderTest(unittest.TestCase):
 
     def test_get_credentials_aws_format_mixed(self):
         self.credentials_reader = CredentialsReader(self.VALID_CREDENTIALS_FILE_AWS_FORMAT_MIXED)
+        assert_credentials(self.credentials_reader)
+
+    def test_get_credentials_aws_format_profile_present(self):
+        self.credentials_reader = CredentialsReader(self.VALID_CREDENTIALS_FILE_AWS_FORMAT_PROFILE_PRESENT)
         assert_credentials(self.credentials_reader)
     
     def test_credentials_file_with_single_key_missing(self):
