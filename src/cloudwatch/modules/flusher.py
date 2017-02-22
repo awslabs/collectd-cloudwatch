@@ -67,7 +67,7 @@ class Flusher(object):
             if self.config.debug and self.metric_map:
                 state = ""
                 for dimension_metrics in self.metric_map:
-                    state += str(dimension_metrics) + "[" + str(metric_map[dimension_metrics][0].statistics.sample_count) + "] "
+                    state += str(dimension_metrics) + "[" + str(self.metric_map[dimension_metrics][0].statistics.sample_count) + "] "
                 self._LOGGER.info("[debug] flushing metrics " + state)
             self._flush()
     
