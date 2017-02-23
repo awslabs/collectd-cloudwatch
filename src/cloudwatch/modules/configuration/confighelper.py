@@ -37,6 +37,7 @@ class ConfigHelper(object):
         self.endpoint = ''
         self.host = ''
         self.proxy_server_name = ''
+        self.proxy_server_port = ''
         self.debug = False
         self.pass_through = False
         self._load_configuration()
@@ -68,6 +69,7 @@ class ConfigHelper(object):
         self._load_region()
         self._load_hostname()
         self._load_proxy_server_name()
+        self._load_proxy_server_port()
         # TODO: implement Auto Scaling Group
         self._set_endpoint()
         self.debug = self.config_reader.debug
@@ -130,6 +132,16 @@ class ConfigHelper(object):
             self.proxy_server_name = self.config_reader.proxy_server_name
         else:
             self.proxy_server_name = None
+
+    def _load_proxy_server_port(self):
+        """
+        Load proxy server port from the configuration file, if configuration file does not contain proxy port entry
+        then set proxy to None.
+        """
+        if self.config_reader.proxy_server_port:
+            self.proxy_server_port = self.config_reader.proxy_server_port
+        else:
+            self.proxy_server_port = None
 
     def _set_endpoint(self):
         """ Creates endpoint from region information """
