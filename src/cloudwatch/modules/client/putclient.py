@@ -30,8 +30,11 @@ class PutClient(object):
         self._validate_and_set_endpoint(config_helper.endpoint)
         self.timeout = (connection_timeout, response_timeout)
         self.proxy_server_name = config_helper.proxy_server_name
+        self.proxy_server_port = config_helper.proxy_server_port
         if (self.proxy_server_name != None):
             self._LOGGER.info("Using proxy server: " + self.proxy_server_name)
+            if (self.proxy_server_port != None ):
+                self._LOGGER.info("Using proxy server port: " + self.proxy_server_port)
         else:
             self._LOGGER.info("No proxy server is in use")
     
@@ -76,7 +79,10 @@ class PutClient(object):
         """
         session = Session()
         if (self.proxy_server_name != None):
-            proxies = {'https': self.proxy_server_name }
+            proxy_server = self.proxy_server_name
+            if (self.proxy_server_port != None):
+                proxy_server = proxy_server +":"+self.proxy_server_port
+            proxies = {'https': proxy_server }
             session.proxies.update(proxies)
         session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))

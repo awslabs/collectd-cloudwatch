@@ -30,6 +30,7 @@ class ConfigReader(object):
     DEBUG_CONFIG_KEY = "debug"
     PASS_THROUGH_CONFIG_KEY = "whitelist_pass_through"
     PROXY_SERVER_NAME_KEY = "proxy_server_name"
+    PROXY_SERVER_PORT_KEY = "proxy_server_port"
 
     def __init__(self, config_path):
         self.config_path = config_path
@@ -54,5 +55,6 @@ class ConfigReader(object):
         self.host = self.reader_utils.get_string(self.HOST_CONFIG_KEY)
         self.region = self.reader_utils.get_string(self.REGION_CONFIG_KEY)
         self.proxy_server_name = self.reader_utils.get_string(self.PROXY_SERVER_NAME_KEY)
+        self.proxy_server_port = self.reader_utils.get_string(self.PROXY_SERVER_PORT_KEY)
         self.pass_through = self.reader_utils.try_get_boolean(self.PASS_THROUGH_CONFIG_KEY, self._PASS_THROUGH_DEFAULT_VALUE)
         self.debug = self.reader_utils.try_get_boolean(self.DEBUG_CONFIG_KEY, self._DEBUG_DEFAULT_VALUE)
