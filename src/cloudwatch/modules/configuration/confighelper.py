@@ -4,6 +4,8 @@ from configreader import ConfigReader
 from metadatareader import MetadataReader
 from credentialsreader import CredentialsReader
 from whitelist import Whitelist, WhitelistConfigReader
+from ..client.ec2getclient import EC2GetClient
+import traceback
 
 class ConfigHelper(object):
     """
@@ -35,9 +37,14 @@ class ConfigHelper(object):
         self._use_iam_role_credentials = False
         self.region = ''
         self.endpoint = ''
+        self.ec2_endpoint = ''
         self.host = ''
+        self.asg_name = 'NONE'
         self.debug = False
         self.pass_through = False
+        self.push_asg = False
+        self.push_constant = False
+        self.constant_dimension_value = ''
         self._load_configuration()
         self.whitelist = Whitelist(WhitelistConfigReader(self.WHITELIST_CONFIG_PATH, self.pass_through).get_regex_list(), self.BLOCKED_METRIC_PATH)
 
@@ -66,10 +73,14 @@ class ConfigHelper(object):
         self._load_credentials()
         self._load_region()
         self._load_hostname()
-        # TODO: implement Auto Scaling Group
         self._set_endpoint()
+        self._set_ec2_endpoint()
+        self._load_autoscaling_group()
         self.debug = self.config_reader.debug
         self.pass_through = self.config_reader.pass_through
+        self.push_asg = self.config_reader.push_asg
+        self.push_constant = self.config_reader.push_constant
+        self.constant_dimension_value = self.config_reader.constant_dimension_value
         self._check_configuration_integrity()
     
     def _get_credentials_path(self):
@@ -119,6 +130,15 @@ class ConfigHelper(object):
                 ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) +  
                     " Using host information provided by Collectd.")
 
+    def _set_ec2_endpoint(self):
+        """ Creates endpoint from region information """
+        if self.region is "localhost":
+            self.ec2_endpoint = "http://" + self.region + "/"
+        elif self.region.startswith("cn-"):
+            self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com.cn/"
+        else:
+            self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com/"
+
     def _set_endpoint(self):
         """ Creates endpoint from region information """
         if self.region is "localhost":
@@ -127,6 +147,20 @@ class ConfigHelper(object):
             self.endpoint = "https://monitoring." + self.region + ".amazonaws.com.cn/"
         else:
             self.endpoint = "https://monitoring." + self.region + ".amazonaws.com/"
+
+    def _load_autoscaling_group(self):
+        """
+        Get the ASG name, if applicable. Defaults to NONE if anything goes wrong
+        """
+        try :
+            instance_id = self.metadata_reader.get_instance_id()
+            ec2Client = EC2GetClient(self)
+            self.asg_name = ec2Client.get_autoscaling_group(instance_id)
+            ConfigHelper._LOGGER.info("Fetched asg name as " + self.asg_name)
+        except Exception as e:
+            self.asg_name = "NONE"
+            ConfigHelper._LOGGER.warning("Failed to fetch auto scaling group name. Cause: ")
+            ConfigHelper._LOGGER.error(traceback.format_exc())
             
     def _check_configuration_integrity(self):
         """ Check the state of this configuration helper object to ensure that all required values are loaded """

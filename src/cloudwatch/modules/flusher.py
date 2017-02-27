@@ -91,10 +91,11 @@ class Flusher(object):
             nan_value_count = self._add_values_to_metric(self.metric_map[key], value_list)
         else:
             if len(self.metric_map) < self._MAX_METRICS_TO_AGGREGATE:
-                metric = MetricDataBuilder(self.config, value_list).build()
-                nan_value_count = self._add_values_to_metric(metric, value_list)
-                if nan_value_count != len(value_list.values):
-                    self.metric_map[key] = metric
+                metrics = MetricDataBuilder(self.config, value_list).build()
+                for metric in metrics:
+                    nan_value_count = self._add_values_to_metric(metric, value_list)
+                    if nan_value_count != len(value_list.values):
+                        self.metric_map[key] = metric
             else:
                 self._LOGGER.warning("Batching queue overflow detected. Dropping metric.")
         if nan_value_count:
