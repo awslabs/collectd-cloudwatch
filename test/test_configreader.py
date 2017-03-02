@@ -13,6 +13,8 @@ class ConfigReaderTest(unittest.TestCase):
     VALID_CONFIG_WITH_WHITE_SPACES = CONFIG_DIR + "valid_config_with_white_spaces"
     VALID_CONFIG_WITH_DEBUG_ENABLED = CONFIG_DIR + "valid_config_with_debug_enabled"
     VALID_CONFIG_WITH_DEBUG_DISABLED = CONFIG_DIR + "valid_config_with_debug_disabled"
+    VALID_CONFIG_WITH_PROXY_SERVER_NAME = CONFIG_DIR + "valid_config_with_proxy_server_name"
+    VALID_CONFIG_WITH_PROXY_SERVER_PORT = CONFIG_DIR + "valid_config_with_proxy_server_port"
     VALID_CONFIG_WITH_PASS_THROUGH_ENABLED = CONFIG_DIR + "valid_config_with_pass_through_enabled"
     VALID_CONFIG_WITH_PASS_THROUGH_DISABLED = CONFIG_DIR + "valid_config_with_pass_through_disabled"
     INVALID_CONFIG_WITH_UNKNOWN_PARAMETER = CONFIG_DIR + "invalid_config_with_unknown_parameters"
@@ -23,6 +25,8 @@ class ConfigReaderTest(unittest.TestCase):
     VALID_SECRET_KEY_STRING = "valid_secret_key"
     VALID_REGION_STRING = "valid_region"
     VALID_HOST_STRING = "valid_host"
+    VALID_PROXY_SERVER_NAME = "server_name"
+    VALID_PROXY_SERVER_PORT = "server_port"
     
     def setUp(self):
         self.config_reader = None
@@ -39,6 +43,8 @@ class ConfigReaderTest(unittest.TestCase):
         self.assertEquals(self.VALID_REGION_STRING, self.config_reader.region)
         self.assertEquals(self.VALID_HOST_STRING, self.config_reader.host)
         self.assertFalse(self.config_reader.debug)
+        self.assertEquals(self.VALID_PROXY_SERVER_NAME, self.config_reader.proxy_server_name)
+        self.assertEquals(self.VALID_PROXY_SERVER_PORT, self.config_reader.proxy_server_port)
     
     def test_valid_config_with_debug_enabled(self):
         self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_DEBUG_ENABLED)
@@ -47,6 +53,14 @@ class ConfigReaderTest(unittest.TestCase):
     def test_valid_config_with_debug_disabled(self):
         self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_DEBUG_DISABLED)
         self.assertFalse(self.config_reader.debug)
+
+    def test_valid_config_with_proxy_server_name(self):
+        self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_PROXY_SERVER_NAME)
+        self.assertEquals(self.VALID_PROXY_SERVER_NAME, self.config_reader.proxy_server_name)
+
+    def test_valid_config_with_proxy_server_port(self):
+        self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_PROXY_SERVER_PORT)
+        self.assertEquals(self.VALID_PROXY_SERVER_PORT, self.config_reader.proxy_server_port)
 
     def test_valid_config_with_pass_through_enabled(self):
         self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_PASS_THROUGH_ENABLED)
