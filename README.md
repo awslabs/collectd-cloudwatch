@@ -4,7 +4,7 @@ The [CloudWatch](http://aws.amazon.com/cloudwatch/) collectd plugin is a publish
 The plugin offers additional functionality for EC2 customers such as automatic discovery of Instance ID and AWS region.
 
 ## Installation
- * Download [installation script](https://github.com/awslabs/collectd-cloudwatch/blob/master/src/setup.py), place it on the instance and execute it:
+ * Download [installation script](https://github.com/awslabs/collectd-cloudwatch/blob/forpython2.6_test/src/setup.py), place it on the instance and execute it:
 ```
 chmod u+x setup.py
 sudo ./setup.py
