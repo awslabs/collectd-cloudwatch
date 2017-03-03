@@ -63,15 +63,15 @@ class WhitelistConfigReader(object):
                 return True
             return False
         except Exception as e:
-            self._LOGGER.warning("The whitelist rule: '{}' is invalid, reason: {}".format(str(regex_string), str(e.message)))
+            self._LOGGER.warning("The whitelist rule: '{0}' is invalid, reason: {1}".format(str(regex_string), str(e.message)))
             return False
 
     def _is_allowed_regex(self, regex_string):
         if self.pass_through_allowed:
             return True
         if self.pass_through_regex.match(regex_string):
-            self._LOGGER.warning("The unsafe whitelist rule: '{}' was disabled. "
-                                 "Revisit the rule or change {} option in the plugin configuration.".format(regex_string, ConfigReader.PASS_THROUGH_CONFIG_KEY))
+            self._LOGGER.warning("The unsafe whitelist rule: '{0}' was disabled. "
+                                 "Revisit the rule or change {1} option in the plugin configuration.".format(regex_string, ConfigReader.PASS_THROUGH_CONFIG_KEY))
             return False
         return True
 

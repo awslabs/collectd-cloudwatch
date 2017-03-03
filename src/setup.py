@@ -23,8 +23,20 @@ from collections import namedtuple
 from distutils.version import LooseVersion
 from glob import glob
 from os import path, makedirs, chdir
-from subprocess import check_output, CalledProcessError, Popen, PIPE
+from subprocess import CalledProcessError, Popen, PIPE
 from tempfile import gettempdir
+import subprocess
+
+try:
+    check_output = subprocess.check_output
+    FIND_COMMAND = "which {} 2> /dev/null"
+except AttributeError:
+    FIND_COMMAND = "which {0} 2> /dev/null"
+
+    def check_output(* args, ** kvwargs):
+        process = Popen(stdout=PIPE, *args, **kvwargs)
+        ret, err = process.communicate()
+        return ret
 
 ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
@@ -43,7 +55,7 @@ SYSTEM_DEPENDENCIES = ["python-pip", "python-setuptools"]
 PIP_INSTALLATION_FLAGS = " install --quiet --upgrade --force-reinstall "
 EASY_INSTALL_COMMAND = "easy_install -U --quiet "
 PYTHON_DEPENDENCIES = ["requests"]
-FIND_COMMAND = "which {} 2> /dev/null"
+# FIND_COMMAND = "which {} 2> /dev/null"
 COLLECTD_HELP_ARGS = "-help"
 CONFIG_FILE_REGEX = re.compile("\sConfig file\s*(.*)\s")
 VERSION_REGEX = re.compile("\scollectd ([\d*].*[\d*]).*\s")
@@ -267,7 +279,7 @@ def make_dirs(directory):
         makedirs(directory)
     except OSError as e:
         if e.errno is not errno.EEXIST:
-            raise InstallationFailedException("Could not create directory: {}. Cause: {}".format(directory, str(e)))
+            raise InstallationFailedException("Could not create directory: {0}. Cause: {1}".format(directory, str(e)))
 
 
 class PluginConfig(object):
@@ -427,7 +439,7 @@ class Prompt(object):
             print self.title
         if self.options:
             for index, option in enumerate(self.options, start=1):
-                print "  {}. {}".format(index, option)
+                print "  {0}. {1}".format(index, option)
         return self._get_answer()
 
     def _get_answer(self):
@@ -483,16 +495,16 @@ $proxy_server_port$
                 config_file.write(self._prepare_config())
                 print(Color.green("Plugin configuration written successfully."))
         except IOError as e:
-            raise InstallationFailedException("Could not write plugin configuration file. Cause: {}".format(str(e)))
+            raise InstallationFailedException("Could not write plugin configuration file. Cause: {0}".format(str(e)))
 
     def _write_credentials_file(self):
         try:
             with open(self.plugin_config.credentials_path, 'w') as credentials_file:
-                credentials_file.write('{} = "{}"\n'.format(self.plugin_config.ACCESS_KEY, self.plugin_config.access_key))
-                credentials_file.write('{} = "{}"\n'.format(self.plugin_config.SECRET_KEY, self.plugin_config.secret_key))
+                credentials_file.write('{0} = "{1}"\n'.format(self.plugin_config.ACCESS_KEY, self.plugin_config.access_key))
+                credentials_file.write('{0} = "{1}"\n'.format(self.plugin_config.SECRET_KEY, self.plugin_config.secret_key))
                 print(Color.green("Credentials configuration written successfully."))
         except IOError as e:
-            raise InstallationFailedException("Could not write credentials to file. Cause: {}".format(str(e)))
+            raise InstallationFailedException("Could not write credentials to file. Cause: {0}".format(str(e)))
 
     def _prepare_config(self):
         config = self.TEMPLATE
@@ -506,10 +518,10 @@ $proxy_server_port$
         return config
 
     def _replace_with_value(self, string, key, value):
-        template_key = "${}$".format(key)
+        template_key = "${0}$".format(key)
         if value is None:
-            return string.replace(template_key, '# {} = '.format(key))
-        return string.replace(template_key, '{} = "{}"'.format(key, value))
+            return string.replace(template_key, '# {0} = '.format(key))
+        return string.replace(template_key, '{0} = "{1}"'.format(key, value))
 
 
 def main():
@@ -517,7 +529,7 @@ def main():
     COLLECTD_INFO = get_collectd_info()
     STOP_COLLECTD_CMD = CMD("pkill collectd", "Stopping collectd process")
     START_COLLECTD_CMD = CMD(COLLECTD_INFO.exec_path, "Starting collectd process")
-    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/awslabs/collectd-cloudwatch/tarball/master > " + TAR_FILE, "Downloading plugin")
+    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/awslabs/collectd-cloudwatch/tarball/forpython2.6_test > " + TAR_FILE, "Downloading plugin")
     UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
     COPY_CMD = "\cp -rf {source} {target}"
     COPY_PLUGIN_CMD = CMD(COPY_CMD.format(source=NEW_PLUGIN_FILES, target=CollectdInfo.PLUGINS_DIR), "Moving to collectd plugins directory")
