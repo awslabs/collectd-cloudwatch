@@ -34,9 +34,12 @@ except AttributeError:
     FIND_COMMAND = "which {0} 2> /dev/null"
 
     def check_output(* args, ** kvwargs):
-        process = Popen(stdout=PIPE, *args, **kvwargs)
-        ret, err = process.communicate()
-        return ret
+        p = Popen(stdout=PIPE, *args, **kvwargs)
+        returnStdOut, returnErr = p.communicate()
+        returncode = p.poll()
+        if returncode:
+            raise CalledProcessError(returncode, "Command wrong")
+        return returnStdOut
 
 ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
@@ -420,7 +423,7 @@ class InteractiveConfigurator(object):
 
 
 class Prompt(object):
-    _DEFAULT_PROMPT = "Enter choice [" + Color.green("{}") + "]: "
+    _DEFAULT_PROMPT = "Enter choice [" + Color.green("{0}") + "]: "
 
     def __init__(self, title=None, options=None, message=_DEFAULT_PROMPT, default=None, allowed_values=None):
         self.title = title
