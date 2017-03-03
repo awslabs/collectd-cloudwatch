@@ -274,12 +274,14 @@ class PluginConfig(object):
     CREDENTIALS_PATH_KEY = "credentials_path"
     REGION_KEY = "region"
     HOST_KEY = "host"
+    PROXY_SERVER_NAME = "proxy_server_name"
+    PROXY_SERVER_PORT = "proxy_server_port"
     PASS_THROUGH_KEY = "whitelist_pass_through"
     DEBUG_KEY = "debug"
     ACCESS_KEY = "aws_access_key"
     SECRET_KEY = "aws_secret_key"
 
-    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None):
+    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None):
         self.credentials_path = credentials_path
         self.access_key = access_key
         self.secret_key = secret_key
@@ -290,6 +292,8 @@ class PluginConfig(object):
         self.debug = False
         self.pass_through = False
         self.credentials_file_exist = False
+        self.proxy_server_name = proxy_server_name
+        self.proxy_server_port = proxy_server_port
 
 
 class InteractiveConfigurator(object):
@@ -304,6 +308,8 @@ class InteractiveConfigurator(object):
         self._configure_region()
         self._configure_hostname()
         self._configure_credentials()
+        self._configure_proxy_server_name()
+        self._configure_proxy_server_port()
         self._configure_plugin_installation_method()
 
     def _configure_region(self):
@@ -336,6 +342,27 @@ class InteractiveConfigurator(object):
     def _get_hostname(self):
         hostname = platform.node()
         return Prompt(message="Enter hostname [" + Color.green(hostname) + "]: ", default=hostname).run()
+
+    def _configure_proxy_server_name(self):
+        proxy_server_name = None
+        choice = Prompt("\nEnter proxy server name:", options=[None, "Custom"],default="1").run()
+        if choice == "2":
+            self.config.proxy_server_name = self._get_proxy_server_name()
+
+    def _get_proxy_server_name(self):
+        proxy_server_name = None
+        return Prompt("\nEnter proxy server name (e.g. http[s]://hostname):", default=None).run()
+
+    def _configure_proxy_server_port(self):
+        proxy_server_port = None
+        choice = Prompt("\nEnter proxy server port:", options=[None, "Custom"],default="1").run()
+        if choice == "2":
+            self.config.proxy_server_port = self._get_proxy_server_port()
+
+    def _get_proxy_server_port(self):
+        proxy_server_port = None
+        return Prompt("\nEnter proxy server port (e.g. 8080):", default=None).run()
+
 
     def _configure_credentials(self):
         if self._is_iam_user_required():
@@ -433,6 +460,12 @@ $whitelist_pass_through$
 
 # The debug parameter enables verbose logging of published metrics
 $debug$
+
+# This parameter contains proxy server name to connect aws, if needed. Foramt is http[s]://PROXYHOST
+$proxy_server_name$
+
+# This parameter contains proxy server port to connect aws, if needed.
+$proxy_server_port$
 """
     DEFAULT_PLUGIN_CONFIG_FILE = path.join(DEFAULT_PLUGIN_CONFIGURATION_DIR, "plugin.conf")
 
@@ -468,6 +501,8 @@ $debug$
         config = self._replace_with_value(config, self.plugin_config.HOST_KEY, self.plugin_config.host)
         config = self._replace_with_value(config, self.plugin_config.PASS_THROUGH_KEY, self.plugin_config.pass_through)
         config = self._replace_with_value(config, self.plugin_config.DEBUG_KEY, self.plugin_config.debug)
+        config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_NAME, self.plugin_config.proxy_server_name)
+        config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_PORT, self.plugin_config.proxy_server_port)
         return config
 
     def _replace_with_value(self, string, key, value):

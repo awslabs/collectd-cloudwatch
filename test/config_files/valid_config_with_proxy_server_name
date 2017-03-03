@@ -1,0 +1,4 @@
+proxy_server_name = server_name
+region = valid_region
+host = valid_host
+debug = true

@@ -3,3 +3,5 @@ region = valid_region
 host = valid_host
 whitelist_pass_through = true
 debug = false
+proxy_server_name = server_name
+proxy_server_port = server_port
