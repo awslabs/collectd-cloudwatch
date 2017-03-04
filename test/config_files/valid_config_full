@@ -5,3 +5,5 @@ whitelist_pass_through = true
 debug = false
 push_asg = false
 push_constant = false
+proxy_server_name = server_name
+proxy_server_port = server_port

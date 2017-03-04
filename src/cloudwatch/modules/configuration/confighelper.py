@@ -40,6 +40,8 @@ class ConfigHelper(object):
         self.ec2_endpoint = ''
         self.host = ''
         self.asg_name = 'NONE'
+        self.proxy_server_name = ''
+        self.proxy_server_port = ''
         self.debug = False
         self.pass_through = False
         self.push_asg = False
@@ -73,6 +75,8 @@ class ConfigHelper(object):
         self._load_credentials()
         self._load_region()
         self._load_hostname()
+        self._load_proxy_server_name()
+        self._load_proxy_server_port()
         self._set_endpoint()
         self._set_ec2_endpoint()
         self._load_autoscaling_group()
@@ -138,6 +142,26 @@ class ConfigHelper(object):
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com.cn/"
         else:
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com/"
+
+    def _load_proxy_server_name(self):
+        """
+        Load proxy server name from the configuration file, if configuration file does not contain proxy entry
+        then set proxy to None.
+        """
+        if self.config_reader.proxy_server_name:
+            self.proxy_server_name = self.config_reader.proxy_server_name
+        else:
+            self.proxy_server_name = None
+
+    def _load_proxy_server_port(self):
+        """
+        Load proxy server port from the configuration file, if configuration file does not contain proxy port entry
+        then set proxy to None.
+        """
+        if self.config_reader.proxy_server_port:
+            self.proxy_server_port = self.config_reader.proxy_server_port
+        else:
+            self.proxy_server_port = None
 
     def _set_endpoint(self):
         """ Creates endpoint from region information """

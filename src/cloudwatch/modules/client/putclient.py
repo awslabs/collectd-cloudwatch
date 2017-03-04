@@ -29,6 +29,14 @@ class PutClient(object):
         self.request_builder = RequestBuilder(config_helper.credentials, config_helper.region)
         self._validate_and_set_endpoint(config_helper.endpoint)
         self.timeout = (connection_timeout, response_timeout)
+        self.proxy_server_name = config_helper.proxy_server_name
+        self.proxy_server_port = config_helper.proxy_server_port
+        if (self.proxy_server_name != None):
+            self._LOGGER.info("Using proxy server: " + self.proxy_server_name)
+            if (self.proxy_server_port != None ):
+                self._LOGGER.info("Using proxy server port: " + self.proxy_server_port)
+        else:
+            self._LOGGER.info("No proxy server is in use")
     
     def _validate_and_set_endpoint(self, endpoint):
         pattern = re.compile("http[s]?://*/")
@@ -70,6 +78,12 @@ class PutClient(object):
         Executes HTTP GET request with timeout using the endpoint defined upon client creation.
         """
         session = Session()
+        if (self.proxy_server_name != None):
+            proxy_server = self.proxy_server_name
+            if (self.proxy_server_port != None):
+                proxy_server = proxy_server +":"+self.proxy_server_port
+            proxies = {'https': proxy_server }
+            session.proxies.update(proxies)
         session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         result = session.get(self.endpoint + "?" + request, headers=self._get_custom_headers(), timeout=self.timeout)

@@ -16,6 +16,8 @@ class ConfigHelperTest(unittest.TestCase):
     VALID_CONFIG_FULL = CONFIG_DIR + "valid_config_full"
     VALID_CONFIG_WITH_PASS_THROUGH_ENABLED = CONFIG_DIR + "valid_config_with_pass_through_enabled"
     VALID_CONFIG_WITH_PASS_THROUGH_DISABLED = CONFIG_DIR + "valid_config_with_pass_through_disabled"
+    VALID_CONFIG_WITH_PROXY_SERVER_NAME = CONFIG_DIR + "valid_config_with_proxy_server_name"
+    VALID_CONFIG_WITH_PROXY_SERVER_PORT = CONFIG_DIR + "valid_config_with_proxy_server_port"
     VALID_CONFIG_WITHOUT_CREDS = CONFIG_DIR + "valid_config_without_creds"
     VALID_CREDENTIALS_FILE = CONFIG_DIR + "valid_credentials_file"
     MISSING_CONFIG = CONFIG_DIR + "no_config"
@@ -25,6 +27,8 @@ class ConfigHelperTest(unittest.TestCase):
     VALID_SECRET_KEY_STRING = "valid_secret_key"
     VALID_REGION_STRING = "valid_region"
     VALID_HOST_STRING = "valid_host"
+    VALID_PROXY_SERVER_NAME = "server_name"
+    VALID_PROXY_SERVER_PORT = "server_port"
 
     FAKE_SERVER = None
     
@@ -61,10 +65,20 @@ class ConfigHelperTest(unittest.TestCase):
         self.assertEquals(ConfigHelperTest.VALID_REGION_STRING, self.config_helper.region)
         self.assertTrue(self.config_helper.pass_through)
         self.assertFalse(self.config_helper.debug)
+        self.assertEquals(self.VALID_PROXY_SERVER_NAME, self.config_helper.proxy_server_name)
+        self.assertEquals(self.VALID_PROXY_SERVER_PORT, self.config_helper.proxy_server_port)
     
     def test_debug_is_enabled_by_config_file(self):
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_DEBUG_ENABLED)
         self.assertTrue(self.config_helper.debug)
+
+    def test_with_proxy_server_name(self):
+        self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_PROXY_SERVER_NAME)
+        self.assertEquals(self.VALID_PROXY_SERVER_NAME, self.config_helper.proxy_server_name)
+
+    def test_with_proxy_server_name(self):
+        self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_PROXY_SERVER_PORT)
+        self.assertEquals(self.VALID_PROXY_SERVER_PORT, self.config_helper.proxy_server_port)
     
     def test_iam_role_not_refreshed_when_using_credentials_from_file(self):
         self.server.set_expected_response("Error", 404)
