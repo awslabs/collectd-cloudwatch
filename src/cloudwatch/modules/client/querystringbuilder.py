@@ -28,11 +28,18 @@ class QuerystringBuilder(object):
         with all keys sorted in ascending order as required by CloudWatch.
         """
         metric_map = self._build_metric_map(metric_list)
-        request_map.update(metric_map)
-        sorted_query_data = sorted(request_map.items(),key=operator.itemgetter(0))
+        return self.build_querystring_from_map(metric_map, request_map)
+
+    def build_querystring_from_map(self, call_map, base_map):
+        """
+        Creates a query string from maps. Merges the "call map" with a base map, and creates the query string.
+        """
+        base_map.update(call_map)
+        sorted_query_data = sorted(base_map.items(),key=operator.itemgetter(0))
         # by default urlencode replace spaces with '+' but CloudWatch requires them to be encoded to '%20'
         url_string = urlencode(sorted_query_data).replace('+', '%20') 
         return url_string
+
 
     def _build_metric_map(self, metric_list):
         """ 
