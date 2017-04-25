@@ -84,7 +84,7 @@ class MetricDataBuilder(object):
         
     def build(self):
         """ Builds metric data object with name and dimensions but without value or statistics """
-        return MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions())
+        return MetricDataStatistic(metric_name=self._build_metric_name(), unit=self.vl.type_instance, dimensions=self._build_metric_dimensions())
         
     def _build_metric_name(self): 
         """
