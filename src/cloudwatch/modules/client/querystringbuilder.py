@@ -15,6 +15,7 @@ class QuerystringBuilder(object):
     _METRIC_NAME_KEY = "MetricName"
     _NAME_KEY = "Name"
     _VALUE_KEY = "Value"
+    _UNIT_KEY = "Unit"
     _TIMESTAMP_KEY = "Timestamp"
     _STATISTICS_KEY = "StatisticValues."
     _STAT_MAX = _STATISTICS_KEY + "Maximum"
@@ -47,6 +48,7 @@ class QuerystringBuilder(object):
             metric_map[metric_prefix + self._TIMESTAMP_KEY] = metric.timestamp
             self._add_dimensions(metric, metric_map, metric_prefix)
             self._add_values(metric, metric_map, metric_prefix)
+            self._add_unit(metric, metric_map, metric_prefix)
             metric_index += 1
         return metric_map
     
@@ -67,3 +69,6 @@ class QuerystringBuilder(object):
         metric_map[metric_prefix + self._STAT_MIN] = metric.statistics.min
         metric_map[metric_prefix + self._STAT_SUM] = metric.statistics.sum
         metric_map[metric_prefix + self._STAT_SAMPLE] = metric.statistics.sample_count
+
+    def _add_unit(self, metric, metric_map, metric_prefix):
+        metric_map[metric_prefix + self._UNIT_KEY] = metric.unit
