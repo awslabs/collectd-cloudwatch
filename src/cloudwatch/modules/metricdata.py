@@ -86,11 +86,11 @@ class MetricDataBuilder(object):
 
     def build(self):
         """ Builds metric data object with name and dimensions but without value or statistics """
-        metric_array = [MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions(), timestamp=self._build_timestamp())]
+        metric_array = [MetricDataStatistic(metric_name=self._build_metric_name(), unit=self.vl.type_instance, dimensions=self._build_metric_dimensions(), timestamp=self._build_timestamp())]
         if self.config.push_asg:
-            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_asg_dimension(), timestamp=self._build_timestamp()))
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), unit=self.vl.type_instance, dimensions=self._build_asg_dimension(), timestamp=self._build_timestamp()))
         if self.config.push_constant:
-            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), unit=self.vl.type_instance, dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
         return metric_array
         
     def _build_timestamp(self):
