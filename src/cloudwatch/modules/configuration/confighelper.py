@@ -6,6 +6,7 @@ from credentialsreader import CredentialsReader
 from whitelist import Whitelist, WhitelistConfigReader
 from ..client.ec2getclient import EC2GetClient
 import traceback
+from dimensionreader import DimensionConfigReader
 
 class ConfigHelper(object):
     """
@@ -30,6 +31,7 @@ class ConfigHelper(object):
     _METADATA_SERVICE_ADDRESS = 'http://169.254.169.254/' 
     WHITELIST_CONFIG_PATH = _DEFAULT_AGENT_ROOT_FOLDER + 'whitelist.conf'
     BLOCKED_METRIC_PATH = _DEFAULT_AGENT_ROOT_FOLDER + 'blocked_metrics'
+    DIMENSION_CONFIG_PATH = _DEFAULT_AGENT_ROOT_FOLDER + 'dimensions.conf'
 
     def __init__(self, config_path=_DEFAULT_CONFIG_PATH, metadata_server=_METADATA_SERVICE_ADDRESS):
         self._config_path = config_path
@@ -211,3 +213,4 @@ class ConfigHelper(object):
             raise ValueError("AWS secret key is missing.") 
         if not self.region:
             raise ValueError("Region is missing")
+
