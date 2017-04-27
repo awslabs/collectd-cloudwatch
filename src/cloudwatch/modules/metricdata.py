@@ -1,6 +1,7 @@
 import awsutils as awsutils
 import plugininfo
-
+from logger.logger import get_logger
+from dimensionhandler import Dimensions
 
 class MetricDataStatistic(object):
     """
@@ -99,10 +100,14 @@ class MetricDataBuilder(object):
         return ".".join(name_builder)
     
     def _build_metric_dimensions(self):
-        dimensions = {
-              "Host" : self._get_host_dimension(),
-              "PluginInstance" : self._get_plugin_instance_dimension()
-              }
+        if self.config.DIMENSION_CONFIG_PATH != None:
+            d = Dimensions(self.config, self.vl)
+            dimensions = d.get_dimensions()
+        else:
+            dimensions = {
+                "Host" : self._get_host_dimension(),
+                "PluginInstance" : self._get_plugin_instance_dimension()
+                }
         return dimensions
 
     def _get_plugin_instance_dimension(self):
@@ -114,3 +119,5 @@ class MetricDataBuilder(object):
         if self.config.host:
             return self.config.host
         return self.vl.host
+
+
