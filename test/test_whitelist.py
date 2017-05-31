@@ -10,7 +10,7 @@ from cloudwatch.modules.configuration.whitelist import Whitelist, WhitelistConfi
 
 class WhitelistTest(unittest.TestCase):
     CONFIG_DIR = "./test/config_files/"
-    BLOCKED_METRIC_PATH = gettempdir() + "blocked_metrics"
+    BLOCKED_METRIC_PATH = gettempdir() + "/blocked_metrics"
     EMPTY_WHITELIST_FILE = CONFIG_DIR + "empty_whitelist.conf"
     TEST_LITERAL_WHITELIST_FILE = CONFIG_DIR + "literal_whitelist.conf"
     TEST_REGEX_WHITELIST_FILE = CONFIG_DIR + "regex_whitelist.conf"
@@ -34,7 +34,7 @@ class WhitelistTest(unittest.TestCase):
         self.assertTrue(os.path.exists(self.BLOCKED_METRIC_PATH))
 
     def test_whitelist_file_is_created(self):
-        temp_whitelist_file = gettempdir() + "whitelist.conf"
+        temp_whitelist_file = gettempdir() + "/whitelist.conf"
         logger_mock = Mock()
         WhitelistConfigReader._LOGGER = logger_mock
         if os.path.exists(temp_whitelist_file):

@@ -56,19 +56,19 @@ class FlusherTest(unittest.TestCase):
         self.assertFalse(key in self.flusher.nan_key_set)
         key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", [10])
         self.assertTrue(key in self.flusher.metric_map)
-        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 20)
+        self.assertEqual(self.flusher.metric_map[key][0].statistics.sum, 20)
         key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", ["20aaa"])
-        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 20)
+        self.assertEqual(self.flusher.metric_map[key][0].statistics.sum, 20)
         self.assertTrue(key in self.flusher.nan_key_set)
         key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", [-20])
         self.assertTrue(key in self.flusher.metric_map)
-        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 0)
+        self.assertEqual(self.flusher.metric_map[key][0].statistics.sum, 0)
         key = self.add_value_list("plugin", "plugin_instance_2", "type", "type_instance", "host", [10,"20aaa"])
         self.assertTrue( key in self.flusher.metric_map)
-        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 10)
+        self.assertEqual(self.flusher.metric_map[key][0].statistics.sum, 10)
         self.assertTrue(key in self.flusher.nan_key_set)
         key = self.add_value_list("plugin", "plugin_instance_2", "type", "type_instance", "host", ["20aaa", 10])
-        self.assertEqual(self.flusher.metric_map[key].statistics.sum, 20)
+        self.assertEqual(self.flusher.metric_map[key][0].statistics.sum, 20)
         self.assertTrue(key in self.flusher.metric_map)
         self.assertTrue(key in self.flusher.nan_key_set)
         key = self.add_value_list("plugin", "plugin_instance_3", "type", "type_instance", "host", ["20aaa"])
@@ -121,7 +121,7 @@ class FlusherTest(unittest.TestCase):
         self.assertFalse(key in self.flusher.metric_map)
         self.flusher._aggregate_metric(vl)
         self.assertTrue(key in self.flusher.metric_map)
-        metric = self.flusher.metric_map[key]
+        metric = self.flusher.metric_map[key][0]
         self._assert_statistics(metric, min=10, max=10, sum=10, sample_count=1)
     
     def test_aggregate_metric_adds_new_metric_to_map_and_aggregates_values(self):
@@ -130,7 +130,7 @@ class FlusherTest(unittest.TestCase):
         self.assertFalse(key in self.flusher.metric_map)
         self.flusher._aggregate_metric(vl)
         self.assertTrue(key in self.flusher.metric_map)
-        metric = self.flusher.metric_map[key]
+        metric = self.flusher.metric_map[key][0]
         self._assert_statistics(metric, min=-50, max=20, sum=-30, sample_count=4)
     
     def test_aggregate_metric_aggregates_values_with_existing_metric(self):
@@ -139,7 +139,7 @@ class FlusherTest(unittest.TestCase):
         self.flusher._aggregate_metric(vl)
         vl = self._get_vl_mock("plugin", "plugin_instance", "type", "type_instance", "host", [100, -30])
         self.flusher._aggregate_metric(vl)
-        metric = self.flusher.metric_map[key]
+        metric = self.flusher.metric_map[key][0]
         self._assert_statistics(metric, min=-30, max=100, sum=80, sample_count=3)
     
     def test_aggregate_metric_will_drop_metrics_above_the_limit(self):
@@ -172,10 +172,10 @@ class FlusherTest(unittest.TestCase):
     def test_prepare_batches_respects_the_size_limit(self):
         for i in range(self.flusher._MAX_METRICS_PER_PUT_REQUEST + 1):
             self.flusher._aggregate_metric(self._get_vl_mock("plugin" + str(i), "plugin_instance", "type", "type_instance", "host", [i]))
+        batch = self.flusher._prepare_batch().next()
+        self.assertEquals(self.flusher._MAX_METRICS_PER_PUT_REQUEST, len(list(batch)))
         batch = self.flusher._prepare_batch()
-        self.assertEquals(self.flusher._MAX_METRICS_PER_PUT_REQUEST, len(batch))
-        batch = self.flusher._prepare_batch()
-        self.assertEquals(1, len(batch))
+        self.assertEquals(1, len(list(batch)))
     
     @patch('cloudwatch.modules.flusher.PutClient')
     def test_flush_can_flush_metrics(self, client_class):

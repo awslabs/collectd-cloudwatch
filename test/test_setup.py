@@ -124,4 +124,3 @@ class ColorTest(unittest.TestCase):
         self.assertEquals(installer.Color.GREEN + test_string + self.END, installer.Color.green(test_string))
         self.assertEquals(installer.Color.YELLOW + test_string + self.END, installer.Color.yellow(test_string))
         self.assertEquals(installer.Color.CYAN + test_string + self.END, installer.Color.cyan(test_string))
-

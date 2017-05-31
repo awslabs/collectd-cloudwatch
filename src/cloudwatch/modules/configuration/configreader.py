@@ -24,11 +24,16 @@ class ConfigReader(object):
     _LOGGER = get_logger(__name__)
     _DEBUG_DEFAULT_VALUE = False
     _PASS_THROUGH_DEFAULT_VALUE = False
+    _PUSH_ASG_DEFAULT_VALUE = False
+    _PUSH_CONSTANT_DEFAULT_VALUE = False
     REGION_CONFIG_KEY = "region"
     HOST_CONFIG_KEY = "host"
     CREDENTIALS_PATH_KEY = "credentials_path"
     DEBUG_CONFIG_KEY = "debug"
     PASS_THROUGH_CONFIG_KEY = "whitelist_pass_through"
+    PUSH_ASG_KEY = "push_asg"
+    PUSH_CONSTANT_KEY = "push_constant"
+    CONSTANT_DIMENSION_KEY = "constant_dimension_value"
     PROXY_SERVER_NAME_KEY = "proxy_server_name"
     PROXY_SERVER_PORT_KEY = "proxy_server_port"
 
@@ -39,6 +44,9 @@ class ConfigReader(object):
         self.host = ''
         self.pass_through = self._PASS_THROUGH_DEFAULT_VALUE
         self.debug = self._DEBUG_DEFAULT_VALUE
+        self.push_asg = self._PUSH_ASG_DEFAULT_VALUE
+        self.push_constant = self._PUSH_CONSTANT_DEFAULT_VALUE
+        self.constant_dimension_value = ''
         try:
             self.reader_utils = ReaderUtils(config_path)
             self._parse_config_file()
@@ -58,3 +66,6 @@ class ConfigReader(object):
         self.proxy_server_port = self.reader_utils.get_string(self.PROXY_SERVER_PORT_KEY)
         self.pass_through = self.reader_utils.try_get_boolean(self.PASS_THROUGH_CONFIG_KEY, self._PASS_THROUGH_DEFAULT_VALUE)
         self.debug = self.reader_utils.try_get_boolean(self.DEBUG_CONFIG_KEY, self._DEBUG_DEFAULT_VALUE)
+        self.push_asg = self.reader_utils.try_get_boolean(self.PUSH_ASG_KEY, self._PUSH_ASG_DEFAULT_VALUE)
+        self.push_constant = self.reader_utils.try_get_boolean(self.PUSH_CONSTANT_KEY, self._PUSH_CONSTANT_DEFAULT_VALUE)
+        self.constant_dimension_value = self.reader_utils.get_string(self.CONSTANT_DIMENSION_KEY)

@@ -19,7 +19,7 @@ class Flusher(object):
     _LOGGER = get_logger(__name__)
     _FLUSH_INTERVAL_IN_SECONDS = 60
     _FLUSH_DELTA_IN_SECONDS = 1 
-    _MAX_METRICS_PER_PUT_REQUEST = 20 
+    _MAX_METRICS_PER_PUT_REQUEST = 20
     _MAX_METRICS_TO_AGGREGATE = 2000 
 
     def __init__(self, config_helper):
@@ -66,8 +66,8 @@ class Flusher(object):
         if self._is_flush_time(current_time):
             if self.config.debug and self.metric_map:
                 state = ""
-                for metric in self.metric_map:
-                    state += str(metric) + "[" + str(self.metric_map[metric].statistics.sample_count) + "] "
+                for dimension_metrics in self.metric_map:
+                    state += str(dimension_metrics) + "[" + str(self.metric_map[dimension_metrics][0].statistics.sample_count) + "] "
                 self._LOGGER.info("[debug] flushing metrics " + state)
             self._flush()
     
@@ -88,13 +88,13 @@ class Flusher(object):
         nan_value_count = 0
         key = self._get_metric_key(value_list)
         if key in self.metric_map:
-            nan_value_count = self._add_values_to_metric(self.metric_map[key], value_list)
+            nan_value_count = self._add_values_to_metrics(self.metric_map[key], value_list)
         else:
             if len(self.metric_map) < self._MAX_METRICS_TO_AGGREGATE:
-                metric = MetricDataBuilder(self.config, value_list).build()
-                nan_value_count = self._add_values_to_metric(metric, value_list)
+                metrics = MetricDataBuilder(self.config, value_list).build()
+                nan_value_count = self._add_values_to_metrics(metrics, value_list)
                 if nan_value_count != len(value_list.values):
-                    self.metric_map[key] = metric
+                    self.metric_map[key] = metrics
             else:
                 self._LOGGER.warning("Batching queue overflow detected. Dropping metric.")
         if nan_value_count:
@@ -106,7 +106,7 @@ class Flusher(object):
         """ 
         return value_list.plugin + "-" + value_list.plugin_instance + "-" + value_list.type + "-" +value_list.type_instance
 
-    def _add_values_to_metric(self, metric, value_list):
+    def _add_values_to_metrics(self, dimension_metrics, value_list):
         """
         Aggregates values from value_list with existing metric
         Add the valid value to the metric and just skip the nan value.
@@ -114,12 +114,14 @@ class Flusher(object):
         Returns:
             return the count of the nan value in value_list
         """
-        nan_value_count = 0
-        for value in value_list.values:
-            if self.is_numerical_value(value):
-                metric.add_value(value)
-            else:
-                nan_value_count += 1
+        
+        for metric in dimension_metrics:
+            nan_value_count = 0
+            for value in value_list.values:
+                if self.is_numerical_value(value):
+                    metric.add_value(value)
+                else:
+                    nan_value_count += 1
         return nan_value_count
 
     def _flush(self):
@@ -128,9 +130,18 @@ class Flusher(object):
         """
         self.last_flush_time = time.time()
         self.client = PutClient(self.config)
-        while self.metric_map:
-            metric_batch = self._prepare_batch()
-            self.client.put_metric_data(MetricDataStatistic.NAMESPACE, metric_batch)
+        if self.metric_map:
+            prepare_batch = self._prepare_batch()
+            try:
+                while True:
+                    metric_batch = prepare_batch.next()
+                    if not metric_batch:
+                        break
+                    self.client.put_metric_data(MetricDataStatistic.NAMESPACE, metric_batch)
+                    if len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST:
+                        break
+            except StopIteration, e:
+                self._LOGGER.error("_flush error: "+ str(e))
 
     def _prepare_batch(self):
         """
@@ -138,7 +149,13 @@ class Flusher(object):
         The batch size is defined by _MAX_METRICS_PER_PUT_REQUEST.
         """
         metric_batch = []
-        while len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST and self.metric_map:
-            key, metric = self.metric_map.popitem()
-            metric_batch.append(metric)
-        return metric_batch
+        while self.metric_map:
+            key, dimension_metrics = self.metric_map.popitem()
+            for metric in dimension_metrics:
+                if len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST:
+                    metric_batch.append(metric)
+                else:
+                    yield metric_batch
+                    metric_batch = []
+                    metric_batch.append(metric)
+        yield metric_batch
