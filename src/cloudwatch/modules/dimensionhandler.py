@@ -15,6 +15,7 @@ class Dimensions(object):
         self.vl = vl
         self.dimension_handlers["InstanceId"] = Dimension_InstanceId(self.config, self.vl)
         self.dimension_handlers["PluginInstance"] = Dimension_PluginInstance(self.config, self.vl)
+        self.dimension_handlers["Hostname"] = Dimension_Hostname(self.config, self.vl)
         for h in self.dimension_handlers:
             self.dimension_handlers[h].register_plugin()
 
