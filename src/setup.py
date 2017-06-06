@@ -277,11 +277,14 @@ class PluginConfig(object):
     PROXY_SERVER_NAME = "proxy_server_name"
     PROXY_SERVER_PORT = "proxy_server_port"
     PASS_THROUGH_KEY = "whitelist_pass_through"
+    PUSH_ASG_KEY = "push_asg"
+    PUSH_CONSTANT_KEY = "push_constant"
+    CONSTANT_DIMENSION_VALUE_KEY = "constant_dimension_value"
     DEBUG_KEY = "debug"
     ACCESS_KEY = "aws_access_key"
     SECRET_KEY = "aws_secret_key"
 
-    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None):
+    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None):
         self.credentials_path = credentials_path
         self.access_key = access_key
         self.secret_key = secret_key
@@ -294,6 +297,9 @@ class PluginConfig(object):
         self.credentials_file_exist = False
         self.proxy_server_name = proxy_server_name
         self.proxy_server_port = proxy_server_port
+        self.push_asg = push_asg
+        self.push_constant = push_constant
+        self.constant_dimension_value = constant_dimension_value
 
 
 class InteractiveConfigurator(object):
@@ -310,7 +316,26 @@ class InteractiveConfigurator(object):
         self._configure_credentials()
         self._configure_proxy_server_name()
         self._configure_proxy_server_port()
+        self._configure_push_asg()
+        self._configure_push_constant()
         self._configure_plugin_installation_method()
+        
+    def _configure_push_asg(self):
+        self.config.push_asg = False
+        choice = Prompt("\nInclude the Auto-Scaling Group name as a metric dimension:", options=["No", "Yes"], default="1").run()
+        if choice == "2":
+            self.config.push_asg = True
+            
+    def _get_constant_dimension_value(self):
+        return Prompt(message="Enter FixedDimension value [" + Color.green("ALL") + "]: ", default="ALL").run()
+        
+    def _configure_push_constant(self):
+        self.config.push_constant = False
+        self.config.constant_dimension_value = "ALL"
+        choice = Prompt("\nInclude the FixedDimension as a metric dimension:", options=["No", "Yes"], default="1").run()
+        if choice == "2":
+            self.config.push_constant = True
+            self.config.constant_dimension_value = self._get_constant_dimension_value()
 
     def _configure_region(self):
         try:
@@ -461,6 +486,16 @@ $whitelist_pass_through$
 # The debug parameter enables verbose logging of published metrics
 $debug$
 
+# Wheter or not to push the ASG as part of the dimension.
+# WARNING: ENABLING THIS WILL LEAD TO CREATING A LARGE NUMBER OF METRICS.
+$push_asg$
+
+# Whether or not to push the constant value to CWM as a metric
+$push_constant$
+
+# Constant dimension value to add to CWL
+$constant_dimension_value$
+
 # This parameter contains proxy server name to connect aws, if needed. Foramt is http[s]://PROXYHOST
 $proxy_server_name$
 
@@ -503,6 +538,9 @@ $proxy_server_port$
         config = self._replace_with_value(config, self.plugin_config.DEBUG_KEY, self.plugin_config.debug)
         config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_NAME, self.plugin_config.proxy_server_name)
         config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_PORT, self.plugin_config.proxy_server_port)
+        config = self._replace_with_value(config, self.plugin_config.PUSH_ASG_KEY, self.plugin_config.push_asg)
+        config = self._replace_with_value(config, self.plugin_config.PUSH_CONSTANT_KEY, self.plugin_config.push_constant)
+        config = self._replace_with_value(config, self.plugin_config.CONSTANT_DIMENSION_VALUE_KEY, self.plugin_config.constant_dimension_value)
         return config
 
     def _replace_with_value(self, string, key, value):
