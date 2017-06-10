@@ -672,11 +672,6 @@ def main():
         metavar='CREDENTIALS_PATH', default=None
     ),
     parser.add_argument(
-        '-b', '--creds_path', required=False,
-        help='Absolute path to AWS credentials file',
-        metavar='CREDENTIALS_PATH', default=None
-    ),
-    parser.add_argument(
         '-d', '--debug', default=False,
         action='store_true', help='Provides verbose logging of metrics emitted to CloudWatch'
     )
