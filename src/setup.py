@@ -672,7 +672,7 @@ def main():
         metavar='CREDENTIALS_PATH', default=None
     ),
     parser.add_argument(
-        '-b', '--', required=False,
+        '-b', '--creds_path', required=False,
         help='Absolute path to AWS credentials file',
         metavar='CREDENTIALS_PATH', default=None
     ),
