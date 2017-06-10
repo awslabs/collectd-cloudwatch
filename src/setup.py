@@ -19,6 +19,7 @@ import shlex
 import shutil
 import time
 import errno
+import argparse
 from collections import namedtuple
 from distutils.version import LooseVersion
 from glob import glob
@@ -305,20 +306,36 @@ class PluginConfig(object):
 class InteractiveConfigurator(object):
     DEFAULT_PROMPT = "Enter choice [" + Color.green("{default}") + "]: "
 
-    def __init__(self, plugin_config, metadata_reader, collectd_info):
+    def __init__(self, plugin_config, metadata_reader, collectd_info, non_interactive, region, host,
+                 proxy_name, proxy_port, access_key, secret_key, creds_path):
         self.config = plugin_config
         self.metadata_reader = metadata_reader
         self.collectd_info = collectd_info
+        self.non_interactive = non_interactive
+        self.region = region
+        self.host = host
+        self.proxy_name = proxy_name
+        self.proxy_port = proxy_port
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.creds_path = creds_path
 
     def run(self):
-        self._configure_region()
-        self._configure_hostname()
-        self._configure_credentials()
-        self._configure_proxy_server_name()
-        self._configure_proxy_server_port()
-        self._configure_push_asg()
-        self._configure_push_constant()
-        self._configure_plugin_installation_method()
+        if self.non_interactive:
+            self._configure_region_non_interactive()
+            self._configure_hostname_non_interactive()
+            self._configure_credentials_non_interactive()
+            self._configure_proxy_server_name_non_interactive()
+            self._configure_proxy_server_port_non_interactive()
+        else:
+            self._configure_region()
+            self._configure_hostname()
+            self._configure_credentials()
+            self._configure_proxy_server_name()
+            self._configure_proxy_server_port()
+            self._configure_push_asg()
+            self._configure_push_constant()
+            self._configure_plugin_installation_method()
         
     def _configure_push_asg(self):
         self.config.push_asg = False
@@ -337,13 +354,22 @@ class InteractiveConfigurator(object):
             self.config.push_constant = True
             self.config.constant_dimension_value = self._get_constant_dimension_value()
 
+    def _configure_region_non_interactive(self):
+        if self.region:
+            self.config.region = self.region
+        else:
+            self._configure_region()
+
     def _configure_region(self):
         try:
             region = self.metadata_reader.get_region()
-            choice = Prompt("\nChoose AWS region for published metrics:", ["Automatic [" + region + "]", "Custom"],
-                            default="1").run()
-            if choice == "2":
-                self.config.region = self._get_region()
+            if self.non_interactive:
+                self.config.region = region
+            else:
+                choice = Prompt("\nChoose AWS region for published metrics:", ["Automatic [" + region + "]", "Custom"],
+                                default="1").run()
+                if choice == "2":
+                    self.config.region = self._get_region()
         except MetadataRequestException as e:
             print(Color.yellow("\nAWS region could not be automatically detected. Cause:" + str(e)))
             self.config.region = self._get_region()
@@ -353,13 +379,22 @@ class InteractiveConfigurator(object):
                       Color.cyan("http://docs.aws.amazon.com/general/latest/gr/rande.html#cw_region"),
                       message="Enter region: ").run()
 
+    def _configure_hostname_non_interactive(self):
+        if self.host:
+            self.config.host = self.host
+        else:
+            self._configure_hostname()
+
     def _configure_hostname(self):
         try:
             instance_id = self.metadata_reader.get_instance_id()
-            choice = Prompt("\nChoose hostname for published metrics:", ["EC2 instance id [" + instance_id + "]", "Custom"],
-                            default="1").run()
-            if choice == "2":
-                self.config.host = self._get_hostname()
+            if self.non_interactive:
+                self.config.host = instance_id
+            else:
+                choice = Prompt("\nChoose hostname for published metrics:", ["EC2 instance id [" + instance_id + "]", "Custom"],
+                                default="1").run()
+                if choice == "2":
+                    self.config.host = self._get_hostname()
         except MetadataRequestException:
             print(Color.yellow("\nEC2 instance id could not be automatically detected."))
             self.config.host = self._get_hostname()
@@ -367,6 +402,12 @@ class InteractiveConfigurator(object):
     def _get_hostname(self):
         hostname = platform.node()
         return Prompt(message="Enter hostname [" + Color.green(hostname) + "]: ", default=hostname).run()
+
+    def _configure_proxy_server_name_non_interactive(self):
+        if self.proxy_name:
+            self.config.proxy_server_name = self.proxy_name
+        else:
+            self.config.proxy_server_name = None
 
     def _configure_proxy_server_name(self):
         proxy_server_name = None
@@ -378,6 +419,12 @@ class InteractiveConfigurator(object):
         proxy_server_name = None
         return Prompt("\nEnter proxy server name (e.g. http[s]://hostname):", default=None).run()
 
+    def _configure_proxy_server_port_non_interactive(self):
+        if self.proxy_port:
+            self.config.proxy_server_port = self.proxy_port
+        else:
+            self.config.proxy_server_port = None
+
     def _configure_proxy_server_port(self):
         proxy_server_port = None
         choice = Prompt("\nEnter proxy server port:", options=[None, "Custom"],default="1").run()
@@ -388,6 +435,13 @@ class InteractiveConfigurator(object):
         proxy_server_port = None
         return Prompt("\nEnter proxy server port (e.g. 8080):", default=None).run()
 
+    def _configure_credentials_non_interactive(self):
+        if self.access_key and self.secret_key:
+            self.config.credentials_path = self._get_credentials_path()
+        self.config.credentials_file_exist = path.exists(str(self.config.credentials_path))
+        if not self.config.credentials_file_exist:
+            self.config.access_key = self.access_key
+            self.config.secret_key = self.secret_key
 
     def _configure_credentials(self):
         if self._is_iam_user_required():
@@ -400,8 +454,9 @@ class InteractiveConfigurator(object):
     def _is_iam_user_required(self):
         try:
             iam_role = self.metadata_reader.get_iam_role_name()
-            answer = Prompt("\nChoose authentication method:", ["IAM Role [" + iam_role + "]", "IAM User"], default="1").run()
-            return answer == "2"
+            if not self.non_interactive:
+                answer = Prompt("\nChoose authentication method:", ["IAM Role [" + iam_role + "]", "IAM User"], default="1").run()
+                return answer == "2"
         except MetadataRequestException:
             print(Color.yellow("\nIAM Role could not be automatically detected."))
             return True
@@ -409,10 +464,17 @@ class InteractiveConfigurator(object):
     def _get_credentials_path(self):
         recommended_path = path.expanduser('~') + '/.aws/credentials'
         creds_path = ""
-        while not path.isabs(creds_path):
-            creds_path = Prompt(
-                message="Enter absolute path to AWS credentials file [" + Color.green(recommended_path) + "]: ",
-                default=recommended_path).run()
+        if not self.non_interactive:
+            while not path.isabs(creds_path):
+                creds_path = Prompt(
+                    message="Enter absolute path to AWS credentials file [" + Color.green(recommended_path) + "]: ",
+                    default=recommended_path).run()
+        else:
+            if self.creds_path:
+                if path.isabs(self.creds_path):
+                    creds_path = self.creds_path
+            else:
+                creds_path = recommended_path
         make_dirs(path.dirname(creds_path))
         return creds_path
 
@@ -565,6 +627,71 @@ def main():
                                  "Creating backup of the original configuration")
     REPLACE_WHITELIST_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_WHITELIST, target=DEFAULT_PLUGIN_CONFIGURATION_DIR), "Replacing whitelist configuration")
 
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='Script for custom installation process for collectd AWS CloudWatch plugin'
+    )
+    parser.add_argument(
+        '-i', '--non_interactive', required=False,
+        help='Non interactive mode',
+        default=False, action='store_true'
+    )
+    parser.add_argument(
+        '-H', '--host_name', required=False,
+        help='Manual override for EC2 Instance ID and Host information propagated by collectd',
+        metavar='HOST_NAME', default=None
+    )
+    parser.add_argument(
+        '-r', '--region', required=False,
+        help='Manual override for region used to publish metrics',
+        metavar='REGION', default=None
+    )
+    parser.add_argument(
+        '-n', '--proxy_name', required=False,
+        help='Proxy server name',
+        metavar='NAME', default=None
+    ),
+    parser.add_argument(
+        '-p', '--proxy_port', required=False,
+        help='Proxy server port',
+        metavar='PORT', default=None
+    ),
+    parser.add_argument(
+        '-a', '--access_key', required=False,
+        help='AWS IAM user access key',
+        metavar='ACCESS_KEY', default=None
+    ),
+    parser.add_argument(
+        '-s', '--secret_key', required=False,
+        help='AWS IAM user secret key',
+        metavar='SECRET_KEY', default=None
+    ),
+    parser.add_argument(
+        '-P', '--creds_path', required=False,
+        help='Absolute path to AWS credentials file',
+        metavar='CREDENTIALS_PATH', default=None
+    ),
+    parser.add_argument(
+        '-b', '--', required=False,
+        help='Absolute path to AWS credentials file',
+        metavar='CREDENTIALS_PATH', default=None
+    ),
+    parser.add_argument(
+        '-d', '--debug', default=False,
+        action='store_true', help='Provides verbose logging of metrics emitted to CloudWatch'
+    )
+
+    args = parser.parse_args()
+    non_interactive = args.non_interactive
+    host = args.host_name
+    region = args.region
+    proxy_name = args.proxy_name
+    proxy_port = args.proxy_port
+    access_key = args.access_key
+    secret_key = args.secret_key
+    creds_path = args.creds_path
+    debug = args.debug
+
     def install_plugin():
         try:
             install_packages(SYSTEM_DEPENDENCIES)
@@ -604,7 +731,8 @@ def main():
 
     def _prepare_plugin_config(plugin_config):
         metadata_reader = MetadataReader()
-        InteractiveConfigurator(plugin_config, metadata_reader, COLLECTD_INFO).run()
+        InteractiveConfigurator(plugin_config, metadata_reader, COLLECTD_INFO, non_interactive, region, host,
+                                proxy_name, proxy_port, access_key, secret_key, creds_path).run()
         PluginConfigWriter(plugin_config).write()
 
     def _inject_plugin_configuration():
