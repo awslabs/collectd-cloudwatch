@@ -20,6 +20,7 @@ import shutil
 import time
 import errno
 import argparse
+import logging
 from collections import namedtuple
 from distutils.version import LooseVersion
 from glob import glob
@@ -52,6 +53,9 @@ DISTRO_NAME_REGEX = re.compile("(?<!...)NAME=\"?([\w\s]*)\"?\s?")
 CLOUD_WATCH_COLLECTD_DETECTION_REGEX = re.compile('^Import [\'\"]cloudwatch_writer[\"\']$|collectd-cloudwatch\.conf', re.MULTILINE | re.IGNORECASE)
 COLLECTD_CONFIG_INCLUDE_REGEX = re.compile("^Include [\'\"](.*?\.conf)[\'\"]", re.MULTILINE | re.IGNORECASE)
 COLLECTD_PYTHON_PLUGIN_CONFIGURATION_REGEX = re.compile("^LoadPlugin python$|^<LoadPlugin python>$", re.MULTILINE | re.IGNORECASE)
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 DISTRIBUTION_TO_INSTALLER = {
     "Ubuntu": APT_INSTALL_COMMAND,
@@ -307,7 +311,8 @@ class InteractiveConfigurator(object):
     DEFAULT_PROMPT = "Enter choice [" + Color.green("{default}") + "]: "
 
     def __init__(self, plugin_config, metadata_reader, collectd_info, non_interactive, region, host,
-                 proxy_name, proxy_port, access_key, secret_key, creds_path):
+                 proxy_name, proxy_port, access_key, secret_key, creds_path, installation_method,push_asg,
+                 push_constant, dimension_value):
         self.config = plugin_config
         self.metadata_reader = metadata_reader
         self.collectd_info = collectd_info
@@ -319,6 +324,10 @@ class InteractiveConfigurator(object):
         self.access_key = access_key
         self.secret_key = secret_key
         self.creds_path = creds_path
+        self.installation_method = installation_method
+        self.push_asg = push_asg
+        self.push_constant = push_constant
+        self.dimension_value = dimension_value
 
     def run(self):
         if self.non_interactive:
@@ -327,6 +336,9 @@ class InteractiveConfigurator(object):
             self._configure_credentials_non_interactive()
             self._configure_proxy_server_name_non_interactive()
             self._configure_proxy_server_port_non_interactive()
+            self._configure_push_asg_non_interactive()
+            self._configure_push_constant_non_interactive()
+            self._configure_plugin_installation_method_non_interactive()
         else:
             self._configure_region()
             self._configure_hostname()
@@ -337,6 +349,12 @@ class InteractiveConfigurator(object):
             self._configure_push_constant()
             self._configure_plugin_installation_method()
         
+    def _configure_push_asg_non_interactive(self):
+        if self.push_asg:
+            self.config.push_asg = True
+        else:
+            self.config.push_asg = False
+
     def _configure_push_asg(self):
         self.config.push_asg = False
         choice = Prompt("\nInclude the Auto-Scaling Group name as a metric dimension:", options=["No", "Yes"], default="1").run()
@@ -345,7 +363,15 @@ class InteractiveConfigurator(object):
             
     def _get_constant_dimension_value(self):
         return Prompt(message="Enter FixedDimension value [" + Color.green("ALL") + "]: ", default="ALL").run()
-        
+
+    def _configure_push_constant_non_interactive(self):
+        if self.push_constant and self.dimension_value:
+            self.config.push_constant = True
+            self.config.constant_dimension_value = self.dimension_value
+        else:
+            self.config.push_constant = False
+            self.config.constant_dimension_value = "ALL"
+
     def _configure_push_constant(self):
         self.config.push_constant = False
         self.config.constant_dimension_value = "ALL"
@@ -373,6 +399,7 @@ class InteractiveConfigurator(object):
         except MetadataRequestException as e:
             print(Color.yellow("\nAWS region could not be automatically detected. Cause:" + str(e)))
             self.config.region = self._get_region()
+            logger.info(self.config.region)
 
     def _get_region(self):
         return Prompt("Enter one of the available regions from: " +
@@ -491,6 +518,15 @@ class InteractiveConfigurator(object):
         if answer == "2":
             self.config.only_add_plugin = True
         elif answer == "3":
+            self.config.use_recommended_collectd_config = True
+
+    def _configure_plugin_installation_method_non_interactive(self):
+        # recommended|add|not_modify
+        if self.installation_method == 'not_modify':
+            pass
+        if self.installation_method == 'add':
+            self.config.only_add_plugin = True
+        if self.installation_method == 'recommended':
             self.config.use_recommended_collectd_config = True
 
 
@@ -630,22 +666,22 @@ def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description='Script for custom installation process for collectd AWS CloudWatch plugin'
-    )
+    ),
     parser.add_argument(
         '-i', '--non_interactive', required=False,
         help='Non interactive mode',
         default=False, action='store_true'
-    )
+    ),
     parser.add_argument(
         '-H', '--host_name', required=False,
         help='Manual override for EC2 Instance ID and Host information propagated by collectd',
         metavar='HOST_NAME', default=None
-    )
+    ),
     parser.add_argument(
         '-r', '--region', required=False,
         help='Manual override for region used to publish metrics',
         metavar='REGION', default=None
-    )
+    ),
     parser.add_argument(
         '-n', '--proxy_name', required=False,
         help='Proxy server name',
@@ -672,6 +708,27 @@ def main():
         metavar='CREDENTIALS_PATH', default=None
     ),
     parser.add_argument(
+        '-m', '--installation_method', required=False,
+        help='Choose how to install CloudWatch plugin in collectd',
+        choices=['recommended', 'add', 'not_modify'],
+        metavar='recommended|add|not_modify', default=None
+    ),
+    parser.add_argument(
+        '-g', '--push_asg', required=False,
+        help='Include the Auto-Scaling Group name as a metric dimension:',
+        default=None, action='store_true'
+    ),
+    parser.add_argument(
+        '-c', '--push_constant', required=False,
+        help='Include the FixedDimension as a metric dimension',
+        default=None, action='store_true'
+    ),
+    parser.add_argument(
+        '-v', '--dimension_value', required=False,
+        help='FixedDimension value',
+        metavar='DIMENSION_VALUE', default=None
+    ),
+    parser.add_argument(
         '-d', '--debug', default=False,
         action='store_true', help='Provides verbose logging of metrics emitted to CloudWatch'
     )
@@ -685,6 +742,10 @@ def main():
     access_key = args.access_key
     secret_key = args.secret_key
     creds_path = args.creds_path
+    installation_method = args.installation_method
+    push_asg = args.push_asg
+    push_constant = args.push_constant
+    dimension_value = args.dimension_value
     debug = args.debug
 
     def install_plugin():
@@ -727,7 +788,8 @@ def main():
     def _prepare_plugin_config(plugin_config):
         metadata_reader = MetadataReader()
         InteractiveConfigurator(plugin_config, metadata_reader, COLLECTD_INFO, non_interactive, region, host,
-                                proxy_name, proxy_port, access_key, secret_key, creds_path).run()
+                                proxy_name, proxy_port, access_key, secret_key, creds_path,installation_method, push_asg,
+                                push_constant, dimension_value).run()
         PluginConfigWriter(plugin_config).write()
 
     def _inject_plugin_configuration():
