@@ -666,68 +666,68 @@ def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description='Script for custom installation process for collectd AWS CloudWatch plugin'
-    ),
+    )
     parser.add_argument(
         '-i', '--non_interactive', required=False,
         help='Non interactive mode',
         default=False, action='store_true'
-    ),
+    )
     parser.add_argument(
         '-H', '--host_name', required=False,
         help='Manual override for EC2 Instance ID and Host information propagated by collectd',
         metavar='HOST_NAME', default=None
-    ),
+    )
     parser.add_argument(
         '-r', '--region', required=False,
         help='Manual override for region used to publish metrics',
         metavar='REGION', default=None
-    ),
+    )
     parser.add_argument(
         '-n', '--proxy_name', required=False,
         help='Proxy server name',
         metavar='NAME', default=None
-    ),
+    )
     parser.add_argument(
         '-p', '--proxy_port', required=False,
         help='Proxy server port',
         metavar='PORT', default=None
-    ),
+    )
     parser.add_argument(
         '-a', '--access_key', required=False,
         help='AWS IAM user access key',
         metavar='ACCESS_KEY', default=None
-    ),
+    )
     parser.add_argument(
         '-s', '--secret_key', required=False,
         help='AWS IAM user secret key',
         metavar='SECRET_KEY', default=None
-    ),
+    )
     parser.add_argument(
         '-P', '--creds_path', required=False,
         help='Absolute path to AWS credentials file',
         metavar='CREDENTIALS_PATH', default=None
-    ),
+    )
     parser.add_argument(
         '-m', '--installation_method', required=False,
         help='Choose how to install CloudWatch plugin in collectd',
         choices=['recommended', 'add', 'not_modify'],
         metavar='recommended|add|not_modify', default=None
-    ),
+    )
     parser.add_argument(
         '-g', '--push_asg', required=False,
         help='Include the Auto-Scaling Group name as a metric dimension:',
         default=None, action='store_true'
-    ),
+    )
     parser.add_argument(
         '-c', '--push_constant', required=False,
         help='Include the FixedDimension as a metric dimension',
         default=None, action='store_true'
-    ),
+    )
     parser.add_argument(
         '-v', '--dimension_value', required=False,
         help='FixedDimension value',
         metavar='DIMENSION_VALUE', default=None
-    ),
+    )
     parser.add_argument(
         '-d', '--debug', default=False,
         action='store_true', help='Provides verbose logging of metrics emitted to CloudWatch'
