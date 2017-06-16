@@ -54,7 +54,8 @@ CLOUD_WATCH_COLLECTD_DETECTION_REGEX = re.compile('^Import [\'\"]cloudwatch_writ
 COLLECTD_CONFIG_INCLUDE_REGEX = re.compile("^Include [\'\"](.*?\.conf)[\'\"]", re.MULTILINE | re.IGNORECASE)
 COLLECTD_PYTHON_PLUGIN_CONFIGURATION_REGEX = re.compile("^LoadPlugin python$|^<LoadPlugin python>$", re.MULTILINE | re.IGNORECASE)
 
-logger = logging.getLogger(__name__)
+logging.basicConfig()
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 DISTRIBUTION_TO_INSTALLER = {
