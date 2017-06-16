@@ -313,7 +313,7 @@ class InteractiveConfigurator(object):
 
     def __init__(self, plugin_config, metadata_reader, collectd_info, non_interactive, region, host,
                  proxy_name, proxy_port, access_key, secret_key, creds_path, installation_method,push_asg,
-                 push_constant, dimension_value):
+                 push_constant, dimension_value, debug):
         self.config = plugin_config
         self.metadata_reader = metadata_reader
         self.collectd_info = collectd_info
@@ -329,6 +329,7 @@ class InteractiveConfigurator(object):
         self.push_asg = push_asg
         self.push_constant = push_constant
         self.dimension_value = dimension_value
+        self.debug = debug
 
     def run(self):
         if self.non_interactive:
@@ -340,7 +341,7 @@ class InteractiveConfigurator(object):
             self._configure_push_asg_non_interactive()
             self._configure_push_constant_non_interactive()
             self._configure_plugin_installation_method_non_interactive()
-            self.debug()
+            if self.debug: self._debug()
         else:
             self._configure_region()
             self._configure_hostname()
@@ -533,9 +534,21 @@ class InteractiveConfigurator(object):
             if self.installation_method == 'recommended':
                 self.config.use_recommended_collectd_config = True
 
-    def debug(self):
-        logger.info('DEBUG')
-        logger.info(self.config.region)
+    def _debug(self):
+        logger.info('-=**********DEBUG**********=-')
+        logger.info('PUSH ASG: {}'.format(self.config.push_asg))
+        logger.info('PUSH CONSTANT: {}'.format(self.config.push_constant))
+        logger.info('CONSTANT DIMENSION VALUE: {}'.format(self.config.constant_dimension_value))
+        logger.info('CREDENTIALS PATH: {}'.format(self.config.credentials_path))
+        logger.info('SECRET KEY: {}'.format(self.config.secret_key))
+        logger.info('ACCESS KEY: {}'.format(self.config.access_key))
+        logger.info('HOST: {}'.format(self.config.host))
+        logger.info('PROXY NAME: {}'.format(self.config.proxy_server_name))
+        logger.info('PROXY PORT: {}'.format(self.config.proxy_server_port))
+        logger.info('CREDENTIALS PATH: {}'.format(self.config.credentials_path))
+        logger.info('METHOD ONLY ADD PLUGIN: {}'.format(self.config.only_add_plugin))
+        logger.info('USE RECOMMENDED CONFIG: {}'.format(self.config.use_recommended_collectd_config))
+        logger.info('REGION: {}'.format(self.config.region))
 
 class Prompt(object):
     _DEFAULT_PROMPT = "Enter choice [" + Color.green("{}") + "]: "
@@ -796,7 +809,7 @@ def main():
         metadata_reader = MetadataReader()
         InteractiveConfigurator(plugin_config, metadata_reader, COLLECTD_INFO, non_interactive, region, host,
                                 proxy_name, proxy_port, access_key, secret_key, creds_path,installation_method, push_asg,
-                                push_constant, dimension_value).run()
+                                push_constant, dimension_value, debug).run()
         PluginConfigWriter(plugin_config).write()
 
     def _inject_plugin_configuration():
