@@ -340,6 +340,7 @@ class InteractiveConfigurator(object):
             self._configure_push_asg_non_interactive()
             self._configure_push_constant_non_interactive()
             self._configure_plugin_installation_method_non_interactive()
+            self.debug()
         else:
             self._configure_region()
             self._configure_hostname()
@@ -400,8 +401,6 @@ class InteractiveConfigurator(object):
         except MetadataRequestException as e:
             print(Color.yellow("\nAWS region could not be automatically detected. Cause:" + str(e)))
             self.config.region = self._get_region()
-            logger.info('DEBUG')
-            logger.info(self.config.region)
 
     def _get_region(self):
         return Prompt("Enter one of the available regions from: " +
@@ -534,6 +533,9 @@ class InteractiveConfigurator(object):
             if self.installation_method == 'recommended':
                 self.config.use_recommended_collectd_config = True
 
+    def debug(self):
+        logger.info('DEBUG')
+        logger.info(self.config.region)
 
 class Prompt(object):
     _DEFAULT_PROMPT = "Enter choice [" + Color.green("{}") + "]: "
