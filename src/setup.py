@@ -522,12 +522,15 @@ class InteractiveConfigurator(object):
 
     def _configure_plugin_installation_method_non_interactive(self):
         # recommended|add|not_modify
-        if self.installation_method == 'not_modify':
+        if not self.installation_method:
             pass
-        if self.installation_method == 'add':
-            self.config.only_add_plugin = True
-        if self.installation_method == 'recommended':
-            self.config.use_recommended_collectd_config = True
+        else:
+            if self.installation_method == 'not_modify':
+                pass
+            if self.installation_method == 'add':
+                self.config.only_add_plugin = True
+            if self.installation_method == 'recommended':
+                self.config.use_recommended_collectd_config = True
 
 
 class Prompt(object):
