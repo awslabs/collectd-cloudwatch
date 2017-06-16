@@ -399,6 +399,7 @@ class InteractiveConfigurator(object):
         except MetadataRequestException as e:
             print(Color.yellow("\nAWS region could not be automatically detected. Cause:" + str(e)))
             self.config.region = self._get_region()
+            logger.info('DEBUG')
             logger.info(self.config.region)
 
     def _get_region(self):
