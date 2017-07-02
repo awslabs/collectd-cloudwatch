@@ -341,7 +341,8 @@ class InteractiveConfigurator(object):
             self._configure_push_asg_non_interactive()
             self._configure_push_constant_non_interactive()
             self._configure_plugin_installation_method_non_interactive()
-            if self.debug: self._debug()
+            if self.debug:
+                self._debug()
         else:
             self._configure_region()
             self._configure_hostname()
@@ -688,7 +689,7 @@ def main():
         description='Script for custom installation process for collectd AWS CloudWatch plugin'
     )
     parser.add_argument(
-        '-i', '--non_interactive', required=False,
+        '-I', '--non_interactive', required=False,
         help='Non interactive mode',
         default=False, action='store_true'
     )
@@ -754,6 +755,17 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.proxy_port is None and args.proxy_name or args.proxy_port and args.proxy_name is None:
+        parser.error('To enable proxy, use both --proxy_name and --proxy_port ')
+
+    if args.access_key is None and args.secret_key or args.access_key and args.secret_key is None:
+        parser.error('For IAM credentials, use both --secret_key and --access_key')
+
+    if args.push_constant is None and args.dimension_value:
+        parser.error('To include the FixedDimension as a metric dimension, '
+                     'use both --push_constant and dimension_value')
+
     non_interactive = args.non_interactive
     host = args.host_name
     region = args.region
