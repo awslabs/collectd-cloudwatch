@@ -540,7 +540,6 @@ class InteractiveConfigurator(object):
         logger.info('PUSH ASG: {}'.format(self.config.push_asg))
         logger.info('PUSH CONSTANT: {}'.format(self.config.push_constant))
         logger.info('CONSTANT DIMENSION VALUE: {}'.format(self.config.constant_dimension_value))
-        logger.info('CREDENTIALS PATH: {}'.format(self.config.credentials_path))
         logger.info('SECRET KEY: {}'.format(self.config.secret_key))
         logger.info('ACCESS KEY: {}'.format(self.config.access_key))
         logger.info('HOST: {}'.format(self.config.host))
@@ -550,6 +549,7 @@ class InteractiveConfigurator(object):
         logger.info('METHOD ONLY ADD PLUGIN: {}'.format(self.config.only_add_plugin))
         logger.info('USE RECOMMENDED CONFIG: {}'.format(self.config.use_recommended_collectd_config))
         logger.info('REGION: {}'.format(self.config.region))
+        logger.info('IAM ROLE (metadata): {}'.format(self.metadata_reader.get_iam_role_name()))
 
 class Prompt(object):
     _DEFAULT_PROMPT = "Enter choice [" + Color.green("{}") + "]: "
