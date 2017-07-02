@@ -764,7 +764,10 @@ def main():
 
     if args.push_constant is None and args.dimension_value:
         parser.error('To include the FixedDimension as a metric dimension, '
-                     'use both --push_constant and dimension_value')
+                     'use both --push_constant and --dimension_value')
+
+    if args.creds_path and args.secret_key is None and args.access_key is None:
+        parser.error('Credential path (--creds_path) used only with --secret_key and --access_key arguments')
 
     non_interactive = args.non_interactive
     host = args.host_name
