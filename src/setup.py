@@ -343,7 +343,7 @@ class InteractiveConfigurator(object):
             self._configure_push_constant_non_interactive()
             self._configure_plugin_installation_method_non_interactive()
             self._configure_debug_non_interactive()
-            if self.debug_setup():
+            if self.debug_setup:
                 self._debug_setup()
         else:
             self._configure_region()
@@ -474,7 +474,6 @@ class InteractiveConfigurator(object):
         self.config.credentials_file_exist = path.exists(str(self.config.credentials_path))
         print "self.config.credentials_file_exist = ", self.config.credentials_file_exist
         if not self.config.credentials_file_exist:
-            print 'BEBUG: file not exist'
             self.config.access_key = self.access_key
             self.config.secret_key = self.secret_key
 
@@ -510,7 +509,6 @@ class InteractiveConfigurator(object):
                     creds_path = self.creds_path
             else:
                 creds_path = recommended_path
-        print 'DEBUG make dir = ', creds_path
         make_dirs(path.dirname(creds_path))
         return creds_path
 
@@ -765,7 +763,7 @@ def main():
     )
     parser.add_argument(
         '-D', '--debug_setup', default=False,
-        action='store_true', help='Provides verbose logging of metrics emitted to CloudWatch'
+        action='store_true', help='Provides verbose logging during setup process'
     )
     args = parser.parse_args()
 
