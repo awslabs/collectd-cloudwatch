@@ -313,7 +313,7 @@ class InteractiveConfigurator(object):
 
     def __init__(self, plugin_config, metadata_reader, collectd_info, non_interactive, region, host,
                  proxy_name, proxy_port, access_key, secret_key, creds_path, installation_method,push_asg,
-                 push_constant, dimension_value, debug):
+                 push_constant, dimension_value, debug_setup, debug):
         self.config = plugin_config
         self.metadata_reader = metadata_reader
         self.collectd_info = collectd_info
@@ -330,6 +330,7 @@ class InteractiveConfigurator(object):
         self.push_constant = push_constant
         self.dimension_value = dimension_value
         self.debug = debug
+        self.debug_setup = debug_setup
 
     def run(self):
         if self.non_interactive:
@@ -341,8 +342,9 @@ class InteractiveConfigurator(object):
             self._configure_push_asg_non_interactive()
             self._configure_push_constant_non_interactive()
             self._configure_plugin_installation_method_non_interactive()
-            if self.debug:
-                self._debug()
+            self._configure_debug_non_interactive()
+            if self.debug_setup():
+                self._debug_setup()
         else:
             self._configure_region()
             self._configure_hostname()
@@ -468,8 +470,11 @@ class InteractiveConfigurator(object):
     def _configure_credentials_non_interactive(self):
         if self.access_key and self.secret_key:
             self.config.credentials_path = self._get_credentials_path()
+            print "self.config.credentials_path = ", self.config.credentials_path
         self.config.credentials_file_exist = path.exists(str(self.config.credentials_path))
+        print "self.config.credentials_file_exist = ", self.config.credentials_file_exist
         if not self.config.credentials_file_exist:
+            print 'BEBUG: file not exist'
             self.config.access_key = self.access_key
             self.config.secret_key = self.secret_key
 
@@ -505,6 +510,7 @@ class InteractiveConfigurator(object):
                     creds_path = self.creds_path
             else:
                 creds_path = recommended_path
+        print 'DEBUG make dir = ', creds_path
         make_dirs(path.dirname(creds_path))
         return creds_path
 
@@ -535,7 +541,11 @@ class InteractiveConfigurator(object):
             if self.installation_method == 'recommended':
                 self.config.use_recommended_collectd_config = True
 
-    def _debug(self):
+    def _configure_debug_non_interactive(self):
+            if self.debug:
+                self.config.debug = True
+
+    def _debug_setup(self):
         logger.info('-=**********DEBUG**********=-')
         logger.info('PUSH ASG: {}'.format(self.config.push_asg))
         logger.info('PUSH CONSTANT: {}'.format(self.config.push_constant))
@@ -753,7 +763,10 @@ def main():
         '-d', '--debug', default=False,
         action='store_true', help='Provides verbose logging of metrics emitted to CloudWatch'
     )
-
+    parser.add_argument(
+        '-D', '--debug_setup', default=False,
+        action='store_true', help='Provides verbose logging of metrics emitted to CloudWatch'
+    )
     args = parser.parse_args()
 
     if args.proxy_port is None and args.proxy_name or args.proxy_port and args.proxy_name is None:
@@ -781,6 +794,7 @@ def main():
     push_asg = args.push_asg
     push_constant = args.push_constant
     dimension_value = args.dimension_value
+    debug_setup = args.debug_setup
     debug = args.debug
 
     def install_plugin():
@@ -824,7 +838,7 @@ def main():
         metadata_reader = MetadataReader()
         InteractiveConfigurator(plugin_config, metadata_reader, COLLECTD_INFO, non_interactive, region, host,
                                 proxy_name, proxy_port, access_key, secret_key, creds_path,installation_method, push_asg,
-                                push_constant, dimension_value, debug).run()
+                                push_constant, dimension_value, debug_setup, debug).run()
         PluginConfigWriter(plugin_config).write()
 
     def _inject_plugin_configuration():
