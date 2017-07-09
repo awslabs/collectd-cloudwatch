@@ -186,7 +186,3 @@ class NonInteractiveTests(unittest.TestCase):
         non_interactive_installer._configure_push_constant_non_interactive()
         self.assertEquals(self.plugin_config.push_constant, self.push_constant)
         self.assertEquals(self.plugin_config.constant_dimension_value, self.dimension_value)
-
-
-if __name__ == '__main__':
-    unittest.main()
