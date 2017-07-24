@@ -29,8 +29,10 @@ from tempfile import gettempdir
 ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H_%M"
-TAR_FILE = "awslabs-collectd-cloudwatch.tar.gz"
-DOWNLOAD_PLUGIN_DIR = "awslabs-collectd-cloudwatch*"
+GITHUB_USER_NAME = "awslabs"
+GITHUB_REPO_BRANCH = "master"
+TAR_FILE = GITHUB_USER_NAME + "-collectd-cloudwatch.tar.gz"
+DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
 DEFAULT_PLUGIN_CONFIGURATION_DIR = "/opt/collectd-plugins/cloudwatch/config"
 NEW_PLUGIN_FILES = DOWNLOAD_PLUGIN_DIR + "/src/*"
 RECOMMENDED_COLLECTD_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd.conf"
@@ -283,8 +285,10 @@ class PluginConfig(object):
     DEBUG_KEY = "debug"
     ACCESS_KEY = "aws_access_key"
     SECRET_KEY = "aws_secret_key"
+    ENABLE_HIGH_DEFINITION_METRICS = "enable_high_definition_metrics"
+    FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
 
-    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None):
+    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None, enable_high_definition_metrics=False, flush_interval_in_seconds=None):
         self.credentials_path = credentials_path
         self.access_key = access_key
         self.secret_key = secret_key
@@ -297,6 +301,8 @@ class PluginConfig(object):
         self.credentials_file_exist = False
         self.proxy_server_name = proxy_server_name
         self.proxy_server_port = proxy_server_port
+        self.enable_high_definition_metrics = enable_high_definition_metrics
+        self.flush_interval_in_seconds = flush_interval_in_seconds
         self.push_asg = push_asg
         self.push_constant = push_constant
         self.constant_dimension_value = constant_dimension_value
@@ -318,8 +324,10 @@ class InteractiveConfigurator(object):
         self._configure_proxy_server_port()
         self._configure_push_asg()
         self._configure_push_constant()
+        self._configure_enable_high_definition_metrics()
+        self._configure_flush_interval_in_seconds()
         self._configure_plugin_installation_method()
-        
+
     def _configure_push_asg(self):
         self.config.push_asg = False
         choice = Prompt("\nInclude the Auto-Scaling Group name as a metric dimension:", options=["No", "Yes"], default="1").run()
@@ -369,25 +377,41 @@ class InteractiveConfigurator(object):
         return Prompt(message="Enter hostname [" + Color.green(hostname) + "]: ", default=hostname).run()
 
     def _configure_proxy_server_name(self):
-        proxy_server_name = None
+        self.config.proxy_server_name = None
         choice = Prompt("\nEnter proxy server name:", options=[None, "Custom"],default="1").run()
         if choice == "2":
             self.config.proxy_server_name = self._get_proxy_server_name()
 
     def _get_proxy_server_name(self):
-        proxy_server_name = None
+        self.config.proxy_server_name = None
         return Prompt("\nEnter proxy server name (e.g. http[s]://hostname):", default=None).run()
 
     def _configure_proxy_server_port(self):
-        proxy_server_port = None
+        self.config.proxy_server_port = None
         choice = Prompt("\nEnter proxy server port:", options=[None, "Custom"],default="1").run()
         if choice == "2":
             self.config.proxy_server_port = self._get_proxy_server_port()
 
     def _get_proxy_server_port(self):
-        proxy_server_port = None
+        self.config.proxy_server_port = None
         return Prompt("\nEnter proxy server port (e.g. 8080):", default=None).run()
 
+    def _configure_enable_high_definition_metrics(self):
+        choice = Prompt("\nEnable high resolution:", options=["Yes", "No"], default="2").run()
+        if choice == "1":
+            self.config.enable_high_definition_metrics = True
+        elif choice == "2" :
+            self.config.enable_high_definition_metrics = False
+
+    def _configure_flush_interval_in_seconds(self):
+        choice = Prompt("\nEnter flush internal:", options=["Default 60s", "Custom"], default="1").run()
+        if choice == "1":
+            self.config.flush_interval_in_seconds = 60
+        elif choice == "2":
+            self.config.flush_interval_in_seconds = self._get_flush_interval_in_seconds()
+
+    def _get_flush_interval_in_seconds(self):
+        return Prompt("\nEnter the customized flush interval ([1, 60] s):", default="60", allowed_values=[str(x) for x in range(1, 61)]).run()
 
     def _configure_credentials(self):
         if self._is_iam_user_required():
@@ -501,6 +525,13 @@ $proxy_server_name$
 
 # This parameter contains proxy server port to connect aws, if needed.
 $proxy_server_port$
+
+# The enable_high_definition_metrics is for high resolution support
+$enable_high_definition_metrics$
+
+# The flush_interval_in_seconds is used for flush interval, it means how long plugin should flush the metrics to Cloudwatch
+$flush_interval_in_seconds$
+
 """
     DEFAULT_PLUGIN_CONFIG_FILE = path.join(DEFAULT_PLUGIN_CONFIGURATION_DIR, "plugin.conf")
 
@@ -538,6 +569,8 @@ $proxy_server_port$
         config = self._replace_with_value(config, self.plugin_config.DEBUG_KEY, self.plugin_config.debug)
         config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_NAME, self.plugin_config.proxy_server_name)
         config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_PORT, self.plugin_config.proxy_server_port)
+        config = self._replace_with_value(config, self.plugin_config.ENABLE_HIGH_DEFINITION_METRICS, self.plugin_config.enable_high_definition_metrics)
+        config = self._replace_with_value(config, self.plugin_config.FLUSH_INTERVAL_IN_SECONDS, self.plugin_config.flush_interval_in_seconds)
         config = self._replace_with_value(config, self.plugin_config.PUSH_ASG_KEY, self.plugin_config.push_asg)
         config = self._replace_with_value(config, self.plugin_config.PUSH_CONSTANT_KEY, self.plugin_config.push_constant)
         config = self._replace_with_value(config, self.plugin_config.CONSTANT_DIMENSION_VALUE_KEY, self.plugin_config.constant_dimension_value)
@@ -555,7 +588,7 @@ def main():
     COLLECTD_INFO = get_collectd_info()
     STOP_COLLECTD_CMD = CMD("pkill collectd", "Stopping collectd process")
     START_COLLECTD_CMD = CMD(COLLECTD_INFO.exec_path, "Starting collectd process")
-    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/awslabs/collectd-cloudwatch/tarball/master > " + TAR_FILE, "Downloading plugin")
+    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/" + GITHUB_USER_NAME + "/collectd-cloudwatch/tarball/" + GITHUB_REPO_BRANCH + " > " + TAR_FILE, "Downloading plugin")
     UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
     COPY_CMD = "\cp -rf {source} {target}"
     COPY_PLUGIN_CMD = CMD(COPY_CMD.format(source=NEW_PLUGIN_FILES, target=CollectdInfo.PLUGINS_DIR), "Moving to collectd plugins directory")

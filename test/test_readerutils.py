@@ -15,6 +15,7 @@ class ReaderUtilsTest(unittest.TestCase):
     VALID_CONFIG_WITH_DEBUG_DISABLED = CONFIG_DIR + "valid_config_with_debug_disabled"
     INVALID_CONFIG_WITH_DEBUG = CONFIG_DIR + "invalid_config_with_debug"
     INVALID_CONFIG_WITH_SYNTAX_ERROR = CONFIG_DIR + "invalid_config_with_syntax_error"
+    INVALID_CONFIG_WITH_HIGH_RESOLUTION_PARAMETERS = CONFIG_DIR + "invalid_highdefinition_parameters"
     MISSING_CONFIG = CONFIG_DIR + "no_config"
     VALID_ACCESS_KEY_STRING = "valid_access_key"
     VALID_SECRET_KEY_STRING = "valid_secret_key"
@@ -62,6 +63,13 @@ class ReaderUtilsTest(unittest.TestCase):
     def test_try_get_boolean_returns_actual_value_when_possible(self):
         reader = ReaderUtils(self.VALID_CONFIG_WITH_DEBUG_DISABLED)
         self.assertFalse(reader.try_get_boolean('debug', True))
+
+    def test_try_get_high_resolution_parameters(self):
+        reader = ReaderUtils(self.INVALID_CONFIG_WITH_HIGH_RESOLUTION_PARAMETERS)
+        enable_high_definition_metrics = reader.get_string("enable_high_definition_metrics")
+        flush_interval_in_seconds = reader.get_string("flush_interval_in_seconds")
+        self.assertEquals('Tru', enable_high_definition_metrics);
+        self.assertEquals('59', flush_interval_in_seconds);
 
     def test_get_boolean_from_invalid_config(self):
         reader = ReaderUtils(self.INVALID_CONFIG_WITH_DEBUG)

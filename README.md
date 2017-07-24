@@ -20,6 +20,8 @@ The default location of the configuration file used by collectd-cloudwatch plugi
  * __host__ - Manual override for EC2 Instance ID and Host information propagated by collectd
  * __proxy_server_name__ - Manual override for proxy server name, used by plugin to connect aws cloudwatch at *.amazonaws.com.
  * __proxy_server_port__ - Manual override for proxy server port, used by plugin to connect aws cloudwatch at *.amazonaws.com.
+ * __enable_high_definition_metrics__ - The storage resolution is for high resolution support
+ * __flush_interval_in_seconds__ - The flush_interval_in_seconds is used for flush interval, it means how long plugin should flush the metrics to Cloudwatch
  * __whitelist_pass_through__ - Used to enable potentially unsafe regular expressions. By default regex such as a line containing `.*` or `.+` only is automatically disabled in the whitelist configuration.
   Setting this value to True may result in a large number of metrics being published. Before changing this parameter, read [pricing information](https://aws.amazon.com/cloudwatch/pricing/) to understand how to estimate your bill.
  * __push_asg__ - Used to include the Auto-Scaling Group as a dimension for all metrics (see `Adding additional dimensions to metrics` below for details)
@@ -39,6 +41,8 @@ push_asg = False
 push_constant = True
 constant_dimension_value = "ALL"
 debug = False
+enable_high_definition_metrics = False
+flush_interval_in_seconds = 60
 ```
 
 

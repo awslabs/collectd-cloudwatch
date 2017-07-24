@@ -1,10 +1,12 @@
 import re
+import os
 
 from ..plugininfo import PLUGIN_NAME, PLUGIN_VERSION
 from requestbuilder import RequestBuilder
 from ..logger.logger import get_logger
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
+from tempfile import gettempdir
 
 
 class PutClient(object):
@@ -24,20 +26,36 @@ class PutClient(object):
     _DEFAULT_CONNECTION_TIMEOUT = 1
     _DEFAULT_RESPONSE_TIMEOUT = 3
     _TOTAL_RETRIES = 1
+    _LOG_FILE_MAX_SIZE = 10*1024*1024
 
     def __init__(self, config_helper, connection_timeout=_DEFAULT_CONNECTION_TIMEOUT, response_timeout=_DEFAULT_RESPONSE_TIMEOUT):
-        self.request_builder = RequestBuilder(config_helper.credentials, config_helper.region)
+        self.request_builder = RequestBuilder(config_helper.credentials, config_helper.region, config_helper.enable_high_definition_metrics)
         self._validate_and_set_endpoint(config_helper.endpoint)
         self.timeout = (connection_timeout, response_timeout)
         self.proxy_server_name = config_helper.proxy_server_name
         self.proxy_server_port = config_helper.proxy_server_port
-        if (self.proxy_server_name != None):
-            self._LOGGER.info("Using proxy server: " + self.proxy_server_name)
-            if (self.proxy_server_port != None ):
-                self._LOGGER.info("Using proxy server port: " + self.proxy_server_port)
-        else:
-            self._LOGGER.info("No proxy server is in use")
-    
+        self.debug = config_helper.debug
+        self.config = config_helper
+        self._prepare_session()
+        if config_helper.debug:
+            if config_helper.proxy_server_name is not None:
+                self._LOGGER.info("Using proxy server: " + config_helper.proxy_server_name)
+                if config_helper.proxy_server_port is not None:
+                    self._LOGGER.info("Using proxy server port: " + config_helper.proxy_server_port)
+            else:
+                self._LOGGER.info("No proxy server is in use")
+
+    def _prepare_session(self):
+        self.session = Session()
+        if self.proxy_server_name is not None:
+            proxy_server = self.proxy_server_name
+            if self.proxy_server_port is not None:
+                proxy_server = proxy_server + ":" + self.proxy_server_port
+            proxies = {'https': proxy_server}
+            self.session.proxies.update(proxies)
+        self.session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
+        self.session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
+
     def _validate_and_set_endpoint(self, endpoint):
         pattern = re.compile("http[s]?://*/")
         if pattern.match(endpoint) or "localhost" in endpoint: 
@@ -56,6 +74,9 @@ class PutClient(object):
         
         if not self._is_namespace_consistent(namespace, metric_list):
             raise ValueError("Metric list contains metrics with namespace different than the one passed as argument.")
+        credentials = self.config.credentials
+        self.request_builder.credentials = credentials
+        self.request_builder.signer.credentials = credentials
         request = self.request_builder.create_signed_request(namespace, metric_list)
         try:
             self._run_request(request) 
@@ -77,16 +98,15 @@ class PutClient(object):
         """
         Executes HTTP GET request with timeout using the endpoint defined upon client creation.
         """
-        session = Session()
-        if (self.proxy_server_name != None):
-            proxy_server = self.proxy_server_name
-            if (self.proxy_server_port != None):
-                proxy_server = proxy_server +":"+self.proxy_server_port
-            proxies = {'https': proxy_server }
-            session.proxies.update(proxies)
-        session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
-        session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
-        result = session.get(self.endpoint + "?" + request, headers=self._get_custom_headers(), timeout=self.timeout)
+        if self.debug:
+            file_path = gettempdir() + "/collectd_plugin_request_trace_log"
+            if os.path.isfile(file_path) and os.path.getsize(file_path) > self._LOG_FILE_MAX_SIZE:
+                os.remove(file_path)
+            with open(file_path, "a") as logfile:
+                logfile.write("curl -i -v -connect-timeout 1 -m 3 -w %{http_code}:%{http_connect}:%{content_type}:%{time_namelookup}:%{time_redirect}:%{time_pretransfer}:%{time_connect}:%{time_starttransfer}:%{time_total}:%{speed_download} -A \"collectd/1.0\" \'" + self.endpoint + "?" + request + "\'")
+                logfile.write("\n\n")
+
+        result = self.session.get(self.endpoint + "?" + request, headers=self._get_custom_headers(), timeout=self.timeout)
         result.raise_for_status()
         return result
     

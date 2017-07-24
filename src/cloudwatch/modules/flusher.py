@@ -29,6 +29,10 @@ class Flusher(object):
         self.metric_map = {}
         self.last_flush_time = time.time()
         self.nan_key_set = set()
+        self.enable_high_definition_metrics = config_helper.enable_high_definition_metrics
+        self.flush_interval_in_seconds = int(config_helper.flush_interval_in_seconds if config_helper.flush_interval_in_seconds else self._FLUSH_INTERVAL_IN_SECONDS)
+        self.max_metrics_to_aggregate = self._MAX_METRICS_PER_PUT_REQUEST if self.enable_high_definition_metrics else self._MAX_METRICS_TO_AGGREGATE
+        self.client = PutClient(self.config)
 
     def is_numerical_value(self, value):
         """
@@ -72,10 +76,12 @@ class Flusher(object):
             self._flush()
     
     def _is_flush_time(self, current_time):
-        return (current_time - self.last_flush_time) + self._FLUSH_DELTA_IN_SECONDS >= self._FLUSH_INTERVAL_IN_SECONDS
+        if self.enable_high_definition_metrics:
+            return (current_time - self.last_flush_time) >= self.flush_interval_in_seconds + self._FLUSH_DELTA_IN_SECONDS
+        return (current_time - self.last_flush_time) + self._FLUSH_DELTA_IN_SECONDS >= self.flush_interval_in_seconds
 
     def record_nan_value(self, key, value_list):
-        if not key in self.nan_key_set:
+        if key not in self.nan_key_set:
             self._LOGGER.warning(
                 "Adding Metric value is not numerical, key: " + key + " value: " + str(value_list.values))
             self.nan_key_set.add(key)
@@ -86,19 +92,34 @@ class Flusher(object):
         If the size of metric_map is above the limit, new metric will not be added and the value_list will be dropped.
         """
         nan_value_count = 0
-        key = self._get_metric_key(value_list)
+        dimension_key = self._get_metric_key(value_list)
+        adjusted_time = int(value_list.time)
+        if self.config.debug:
+            self._LOGGER.info("Received key"+dimension_key + "  Adjusted_time: " + str(adjusted_time) + " Original time: " + str(value_list.time))
+        key = dimension_key
+        if self.enable_high_definition_metrics:
+            key = dimension_key + "-" + str(adjusted_time)
         if key in self.metric_map:
             nan_value_count = self._add_values_to_metrics(self.metric_map[key], value_list)
         else:
-            if len(self.metric_map) < self._MAX_METRICS_TO_AGGREGATE:
-                metrics = MetricDataBuilder(self.config, value_list).build()
-                nan_value_count = self._add_values_to_metrics(metrics, value_list)
-                if nan_value_count != len(value_list.values):
-                    self.metric_map[key] = metrics
+            if len(self.metric_map) < self.max_metrics_to_aggregate:
+                nan_value_count = self._add_metric_to_queue(value_list, adjusted_time, key)
             else:
-                self._LOGGER.warning("Batching queue overflow detected. Dropping metric.")
+                if self.enable_high_definition_metrics:
+                    self._flush()
+                    nan_value_count = self._add_metric_to_queue(value_list, adjusted_time, key)
+                else:
+                    self._LOGGER.warning("Batching queue overflow detected. Dropping metric.")
         if nan_value_count:
-            self.record_nan_value(key, value_list)
+            self.record_nan_value(dimension_key, value_list)
+
+    def _add_metric_to_queue(self, value_list, adjusted_time, key):
+        nan_value_count = 0
+        metrics = MetricDataBuilder(self.config, value_list, adjusted_time).build()
+        nan_value_count = self._add_values_to_metrics(metrics, value_list)
+        if nan_value_count != len(value_list.values):
+            self.metric_map[key] = metrics
+        return nan_value_count
 
     def _get_metric_key(self, value_list):
         """
@@ -129,7 +150,7 @@ class Flusher(object):
         Batches and puts metrics to CloudWatch
         """
         self.last_flush_time = time.time()
-        self.client = PutClient(self.config)
+        metric_map_size = len(self.metric_map)
         if self.metric_map:
             prepare_batch = self._prepare_batch()
             try:
@@ -141,7 +162,8 @@ class Flusher(object):
                     if len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST:
                         break
             except StopIteration, e:
-                self._LOGGER.error("_flush error: "+ str(e))
+                if metric_map_size % self._MAX_METRICS_PER_PUT_REQUEST != 0 or len(self.metric_map) != 0:
+                    self._LOGGER.error("_flush error: " + str(e) + "  Original map size: " + str(metric_map_size))
 
     def _prepare_batch(self):
         """

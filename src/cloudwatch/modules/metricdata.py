@@ -1,6 +1,6 @@
 import awsutils as awsutils
 import plugininfo
-
+import datetime
 
 class MetricDataStatistic(object):
     """
@@ -76,21 +76,26 @@ class MetricDataBuilder(object):
     Keyword arguments:
     config_helper -- The ConfigHelper object with configuration loaded
     vl -- The Collectd ValueList object with metric information
+    adjusted_time - The adjusted_time is the time adjusted according to storage resolution
     """
     
-    def __init__(self, config_helper, vl):
+    def __init__(self, config_helper, vl, adjusted_time=None):
         self.config = config_helper
         self.vl = vl
-        
+        self.adjusted_time = adjusted_time
+
     def build(self):
         """ Builds metric data object with name and dimensions but without value or statistics """
-        metric_array = [MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions())]
+        metric_array = [MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions(), timestamp=self._build_timestamp())]
         if self.config.push_asg:
-            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_asg_dimension()))
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_asg_dimension(), timestamp=self._build_timestamp()))
         if self.config.push_constant:
-            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_constant_dimension()))
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
         return metric_array
         
+    def _build_timestamp(self):
+        return datetime.datetime.utcfromtimestamp(self.adjusted_time).strftime('%Y%m%dT%H%M%SZ') if self.config.enable_high_definition_metrics else None
+
     def _build_metric_name(self): 
         """
         Creates single string metric name from the Collectd ValueList naming format by flattening the
