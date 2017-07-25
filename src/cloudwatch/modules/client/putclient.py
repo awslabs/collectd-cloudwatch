@@ -37,22 +37,19 @@ class PutClient(object):
         self.debug = config_helper.debug
         self.config = config_helper
         self._prepare_session()
-        if config_helper.debug:
-            if config_helper.proxy_server_name is not None:
-                self._LOGGER.info("Using proxy server: " + config_helper.proxy_server_name)
-                if config_helper.proxy_server_port is not None:
-                    self._LOGGER.info("Using proxy server port: " + config_helper.proxy_server_port)
-            else:
-                self._LOGGER.info("No proxy server is in use")
 
     def _prepare_session(self):
         self.session = Session()
         if self.proxy_server_name is not None:
             proxy_server = self.proxy_server_name
+            self._LOGGER.info("Using proxy server: " + proxy_server)
             if self.proxy_server_port is not None:
                 proxy_server = proxy_server + ":" + self.proxy_server_port
+                self._LOGGER.info("Using proxy server port: " + self.proxy_server_port)
             proxies = {'https': proxy_server}
             self.session.proxies.update(proxies)
+        else:
+            self._LOGGER.info("No proxy server is in use")
         self.session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         self.session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
 

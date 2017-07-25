@@ -94,8 +94,7 @@ class Flusher(object):
         nan_value_count = 0
         dimension_key = self._get_metric_key(value_list)
         adjusted_time = int(value_list.time)
-        if self.config.debug:
-            self._LOGGER.info("Received key"+dimension_key + "  Adjusted_time: " + str(adjusted_time) + " Original time: " + str(value_list.time))
+
         key = dimension_key
         if self.enable_high_definition_metrics:
             key = dimension_key + "-" + str(adjusted_time)
@@ -106,6 +105,11 @@ class Flusher(object):
                 nan_value_count = self._add_metric_to_queue(value_list, adjusted_time, key)
             else:
                 if self.enable_high_definition_metrics:
+                    if self.config.debug and self.metric_map:
+                        state = ""
+                        for dimension_metrics in self.metric_map:
+                            state += str(dimension_metrics) + "[" + str(self.metric_map[dimension_metrics][0].statistics.sample_count) + "] "
+                        self._LOGGER.info("[debug] flushing metrics " + state)
                     self._flush()
                     nan_value_count = self._add_metric_to_queue(value_list, adjusted_time, key)
                 else:
