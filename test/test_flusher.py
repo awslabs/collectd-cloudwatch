@@ -191,7 +191,7 @@ class FlusherTest(unittest.TestCase):
         self.assertTrue(self.client.put_metric_data.called)
 
     @patch('cloudwatch.modules.flusher.PutClient')
-    def test_flush_when_enable_high_definition(self, client_class):
+    def test_flush_when_enable_high_resolution(self, client_class):
         client_class.return_value = self.client
         self.flusher.flush_interval_in_seconds = 10
         self.flusher.enable_high_resolution_metrics = True

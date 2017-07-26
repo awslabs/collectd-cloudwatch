@@ -3,13 +3,16 @@
 The [CloudWatch](http://aws.amazon.com/cloudwatch/) collectd plugin is a publishing extension for [collectd](https://collectd.org/), an open source statistic gathering daemon. With our extension all configured collectd metrics are automatically published to CloudWatch. This plugin allows monitoring of servers and applications within and outside of EC2 instances.
 The plugin offers additional functionality for EC2 customers such as automatic discovery of Instance ID and AWS region.
 
+## Attention: collectd python plugin is required for some collectd distribution.
+*  For redhat distribution, run "yum install -y collectd-python".
+*  For other distributions, run corresponding command.
 ## Installation
  * Download [installation script](https://github.com/awslabs/collectd-cloudwatch/blob/master/src/setup.py), place it on the instance and execute it:
- <table><tr><td bgcolor=orange> Attention: collectd python plugin is required for some collectd distribution. If you use redhad distribution, you can run "yum install -y collectd-python" first.</td></tr></table>
 ```
 chmod u+x setup.py
 sudo ./setup.py
 ```
+
  * Follow on screen instructions
 
 ## Configuration
