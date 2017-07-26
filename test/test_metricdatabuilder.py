@@ -23,7 +23,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.config_helper.endpoint = "valid_endpoint"
         self.config_helper.host = "valid_host"
         self.config_helper.region = "localhost"
-        self.config_helper.enable_high_definition_metrics = False
+        self.config_helper.enable_high_resolution_metrics = False
         self.server = self.FAKE_SERVER
         self.server.set_expected_response("OK", 200)
     
@@ -91,14 +91,14 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.assertEquals("somevalue", metric[2].dimensions['FixedDimension'])
         self.assertEquals("0", metric[2].dimensions['PluginInstance'])
 
-    def test_build_with_enable_high_definition_metrics(self):
+    def test_build_with_enable_high_resolution_metrics(self):
         self.config_helper = MagicMock()
         self.config_helper.push_asg = False
         self.config_helper.push_constant = False
         self.config_helper.endpoint = "valid_endpoint"
         self.config_helper.host = "valid_host"
         self.config_helper.region = "localhost"
-        self.config_helper.enable_high_definition_metrics = True
+        self.config_helper.enable_high_resolution_metrics = True
         vl = self._get_vl_mock("CPU", "0", "CPU", "Steal", 112.1)
         metric = MetricDataBuilder(self.config_helper, vl, 160.1).build()
         self.assertEquals(None, metric[0].statistics)

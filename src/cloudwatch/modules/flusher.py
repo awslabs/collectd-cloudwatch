@@ -29,9 +29,9 @@ class Flusher(object):
         self.metric_map = {}
         self.last_flush_time = time.time()
         self.nan_key_set = set()
-        self.enable_high_definition_metrics = config_helper.enable_high_definition_metrics
+        self.enable_high_resolution_metrics = config_helper.enable_high_resolution_metrics
         self.flush_interval_in_seconds = int(config_helper.flush_interval_in_seconds if config_helper.flush_interval_in_seconds else self._FLUSH_INTERVAL_IN_SECONDS)
-        self.max_metrics_to_aggregate = self._MAX_METRICS_PER_PUT_REQUEST if self.enable_high_definition_metrics else self._MAX_METRICS_TO_AGGREGATE
+        self.max_metrics_to_aggregate = self._MAX_METRICS_PER_PUT_REQUEST if self.enable_high_resolution_metrics else self._MAX_METRICS_TO_AGGREGATE
         self.client = PutClient(self.config)
 
     def is_numerical_value(self, value):
@@ -76,7 +76,7 @@ class Flusher(object):
             self._flush()
     
     def _is_flush_time(self, current_time):
-        if self.enable_high_definition_metrics:
+        if self.enable_high_resolution_metrics:
             return (current_time - self.last_flush_time) >= self.flush_interval_in_seconds + self._FLUSH_DELTA_IN_SECONDS
         return (current_time - self.last_flush_time) + self._FLUSH_DELTA_IN_SECONDS >= self.flush_interval_in_seconds
 
@@ -96,7 +96,7 @@ class Flusher(object):
         adjusted_time = int(value_list.time)
 
         key = dimension_key
-        if self.enable_high_definition_metrics:
+        if self.enable_high_resolution_metrics:
             key = dimension_key + "-" + str(adjusted_time)
         if key in self.metric_map:
             nan_value_count = self._add_values_to_metrics(self.metric_map[key], value_list)
@@ -104,7 +104,7 @@ class Flusher(object):
             if len(self.metric_map) < self.max_metrics_to_aggregate:
                 nan_value_count = self._add_metric_to_queue(value_list, adjusted_time, key)
             else:
-                if self.enable_high_definition_metrics:
+                if self.enable_high_resolution_metrics:
                     if self.config.debug and self.metric_map:
                         state = ""
                         for dimension_metrics in self.metric_map:

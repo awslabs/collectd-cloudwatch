@@ -66,9 +66,9 @@ class ReaderUtilsTest(unittest.TestCase):
 
     def test_try_get_high_resolution_parameters(self):
         reader = ReaderUtils(self.INVALID_CONFIG_WITH_HIGH_RESOLUTION_PARAMETERS)
-        enable_high_definition_metrics = reader.get_string("enable_high_definition_metrics")
+        enable_high_resolution_metrics = reader.get_string("enable_high_resolution_metrics")
         flush_interval_in_seconds = reader.get_string("flush_interval_in_seconds")
-        self.assertEquals('Tru', enable_high_definition_metrics);
+        self.assertEquals('Tru', enable_high_resolution_metrics);
         self.assertEquals('59', flush_interval_in_seconds);
 
     def test_get_boolean_from_invalid_config(self):

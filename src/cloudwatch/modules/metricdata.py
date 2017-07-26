@@ -94,7 +94,7 @@ class MetricDataBuilder(object):
         return metric_array
         
     def _build_timestamp(self):
-        return datetime.datetime.utcfromtimestamp(self.adjusted_time).strftime('%Y%m%dT%H%M%SZ') if self.config.enable_high_definition_metrics else None
+        return datetime.datetime.utcfromtimestamp(self.adjusted_time).strftime('%Y%m%dT%H%M%SZ') if self.config.enable_high_resolution_metrics else None
 
     def _build_metric_name(self): 
         """

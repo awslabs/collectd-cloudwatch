@@ -30,7 +30,7 @@ class FlusherTest(unittest.TestCase):
         self.server.set_expected_response("OK", 200)
         self.config_helper = ConfigHelper(config_path=self.VALID_CONFIG_FULL)
         self.config_helper.endpoint = self.server.get_url()
-        self.config_helper.enable_high_definition_metrics = False
+        self.config_helper.enable_high_resolution_metrics = False
         self.config_helper.whitelist = Mock(spec=Whitelist)
         self.flusher = Flusher(self.config_helper)
         self.client = MagicMock()
@@ -106,8 +106,8 @@ class FlusherTest(unittest.TestCase):
         key = self.flusher._get_metric_key(vl2)
         self.assertEquals("plugin-plugin_instance2-type-type_instance", key)
 
-    def test_get_metric_key_is_unique_without_enable_high_definition_metrics(self):
-        self.config_helper.enable_high_definition_metrics = True
+    def test_get_metric_key_is_unique_without_enable_high_resolution_metrics(self):
+        self.config_helper.enable_high_resolution_metrics = True
         self.flusher = Flusher(self.config_helper)
         vl1 = self._get_vl_mock("plugin", "plugin_instance", "type", "type_instance", "host", [10], 101.1)
         key = self.flusher._get_metric_key(vl1)
@@ -194,7 +194,7 @@ class FlusherTest(unittest.TestCase):
     def test_flush_when_enable_high_definition(self, client_class):
         client_class.return_value = self.client
         self.flusher.flush_interval_in_seconds = 10
-        self.flusher.enable_high_definition_metrics = True
+        self.flusher.enable_high_resolution_metrics = True
         self.flusher.max_metrics_to_aggregate = 10
         vl = self._get_vl_mock("plugin", "plugin_instance", "type", "type_instance", "host", [10], 0)
         self.flusher._aggregate_metric(vl)

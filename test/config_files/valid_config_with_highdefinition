@@ -3,5 +3,5 @@ region = valid_region
 host = valid_host
 whitelist_pass_through = true
 debug = false
-enable_high_definition_metrics = true
+enable_high_resolution_metrics = true
 flush_interval_in_seconds = 60

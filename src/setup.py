@@ -285,10 +285,10 @@ class PluginConfig(object):
     DEBUG_KEY = "debug"
     ACCESS_KEY = "aws_access_key"
     SECRET_KEY = "aws_secret_key"
-    ENABLE_HIGH_DEFINITION_METRICS = "enable_high_definition_metrics"
+    ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
     FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
 
-    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None, enable_high_definition_metrics=False, flush_interval_in_seconds=None):
+    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None, enable_high_resolution_metrics=False, flush_interval_in_seconds=None):
         self.credentials_path = credentials_path
         self.access_key = access_key
         self.secret_key = secret_key
@@ -301,7 +301,7 @@ class PluginConfig(object):
         self.credentials_file_exist = False
         self.proxy_server_name = proxy_server_name
         self.proxy_server_port = proxy_server_port
-        self.enable_high_definition_metrics = enable_high_definition_metrics
+        self.enable_high_resolution_metrics = enable_high_resolution_metrics
         self.flush_interval_in_seconds = flush_interval_in_seconds
         self.push_asg = push_asg
         self.push_constant = push_constant
@@ -324,7 +324,7 @@ class InteractiveConfigurator(object):
         self._configure_proxy_server_port()
         self._configure_push_asg()
         self._configure_push_constant()
-        self._configure_enable_high_definition_metrics()
+        self._configure_enable_high_resolution_metrics()
         self._configure_flush_interval_in_seconds()
         self._configure_plugin_installation_method()
 
@@ -396,12 +396,12 @@ class InteractiveConfigurator(object):
         self.config.proxy_server_port = None
         return Prompt("\nEnter proxy server port (e.g. 8080):", default=None).run()
 
-    def _configure_enable_high_definition_metrics(self):
+    def _configure_enable_high_resolution_metrics(self):
         choice = Prompt("\nEnable high resolution:", options=["Yes", "No"], default="2").run()
         if choice == "1":
-            self.config.enable_high_definition_metrics = True
+            self.config.enable_high_resolution_metrics = True
         elif choice == "2" :
-            self.config.enable_high_definition_metrics = False
+            self.config.enable_high_resolution_metrics = False
 
     def _configure_flush_interval_in_seconds(self):
         choice = Prompt("\nEnter flush internal:", options=["Default 60s", "Custom"], default="1").run()
@@ -526,8 +526,8 @@ $proxy_server_name$
 # This parameter contains proxy server port to connect aws, if needed.
 $proxy_server_port$
 
-# The enable_high_definition_metrics is for high resolution support
-$enable_high_definition_metrics$
+# The enable_high_resolution_metrics is for high resolution support
+$enable_high_resolution_metrics$
 
 # The flush_interval_in_seconds is used for flush interval, it means how long plugin should flush the metrics to Cloudwatch
 $flush_interval_in_seconds$
@@ -569,7 +569,7 @@ $flush_interval_in_seconds$
         config = self._replace_with_value(config, self.plugin_config.DEBUG_KEY, self.plugin_config.debug)
         config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_NAME, self.plugin_config.proxy_server_name)
         config = self._replace_with_value(config, self.plugin_config.PROXY_SERVER_PORT, self.plugin_config.proxy_server_port)
-        config = self._replace_with_value(config, self.plugin_config.ENABLE_HIGH_DEFINITION_METRICS, self.plugin_config.enable_high_definition_metrics)
+        config = self._replace_with_value(config, self.plugin_config.ENABLE_HIGH_DEFINITION_METRICS, self.plugin_config.enable_high_resolution_metrics)
         config = self._replace_with_value(config, self.plugin_config.FLUSH_INTERVAL_IN_SECONDS, self.plugin_config.flush_interval_in_seconds)
         config = self._replace_with_value(config, self.plugin_config.PUSH_ASG_KEY, self.plugin_config.push_asg)
         config = self._replace_with_value(config, self.plugin_config.PUSH_CONSTANT_KEY, self.plugin_config.push_constant)

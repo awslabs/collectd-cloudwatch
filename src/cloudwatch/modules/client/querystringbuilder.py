@@ -23,8 +23,8 @@ class QuerystringBuilder(object):
     _STAT_SAMPLE = _STATISTICS_KEY + "SampleCount"
     _STORAGE_RESOLUTION = "StorageResolution"
 
-    def __init__(self, enable_high_definition_metrics=False):
-        self.enable_high_definition_metrics = enable_high_definition_metrics
+    def __init__(self, enable_high_resolution_metrics=False):
+        self.enable_high_resolution_metrics = enable_high_resolution_metrics
    
     def build_querystring(self, metric_list, request_map):
         """
@@ -56,7 +56,7 @@ class QuerystringBuilder(object):
             metric_prefix = self._METRIC_PREFIX + str(metric_index) + "."
             metric_map[metric_prefix + self._METRIC_NAME_KEY] = metric.metric_name
             metric_map[metric_prefix + self._TIMESTAMP_KEY] = metric.timestamp
-            if self.enable_high_definition_metrics:
+            if self.enable_high_resolution_metrics:
                 metric_map[metric_prefix + self._STORAGE_RESOLUTION] = "1"
             self._add_dimensions(metric, metric_map, metric_prefix)
             self._add_values(metric, metric_map, metric_prefix)

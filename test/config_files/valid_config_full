@@ -7,5 +7,5 @@ push_asg = false
 push_constant = false
 proxy_server_name = server_name
 proxy_server_port = server_port
-enable_high_definition_metrics = False
+enable_high_resolution_metrics = False
 flush_interval_in_seconds = 60

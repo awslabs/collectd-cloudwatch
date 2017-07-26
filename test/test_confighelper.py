@@ -33,7 +33,7 @@ class ConfigHelperTest(unittest.TestCase):
     VALID_HOST_STRING = "valid_host"
     VALID_PROXY_SERVER_NAME = "server_name"
     VALID_PROXY_SERVER_PORT = "server_port"
-    VALID_ENABLE_HIGH_DEFINITION_METRICS = "enable_high_definition_metrics"
+    VALID_ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
     VALID_FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
 
     FAKE_SERVER = None
@@ -73,7 +73,7 @@ class ConfigHelperTest(unittest.TestCase):
         self.assertFalse(self.config_helper.debug)
         self.assertEquals(self.VALID_PROXY_SERVER_NAME, self.config_helper.proxy_server_name)
         self.assertEquals(self.VALID_PROXY_SERVER_PORT, self.config_helper.proxy_server_port)
-        self.assertEquals(False, self.config_helper.enable_high_definition_metrics)
+        self.assertEquals(False, self.config_helper.enable_high_resolution_metrics)
         self.assertEquals('60', self.config_helper.flush_interval_in_seconds)
     
     def test_debug_is_enabled_by_config_file(self):
@@ -82,17 +82,17 @@ class ConfigHelperTest(unittest.TestCase):
 
     def test_with_high_resolution_only_parameters(self):
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_HIGH_RESOLUTION_ONLY)
-        self.assertEquals(True, self.config_helper.enable_high_definition_metrics)
+        self.assertEquals(True, self.config_helper.enable_high_resolution_metrics)
         self.assertEquals('60', self.config_helper.flush_interval_in_seconds)
 
     def test_with_high_resolution_only_default_parameters(self):
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.INVALID_CONFIG_WITH_HIGH_RESOLUTION_PARAMETERS)
-        self.assertEquals(False, self.config_helper.enable_high_definition_metrics)
+        self.assertEquals(False, self.config_helper.enable_high_resolution_metrics)
         self.assertEquals('59', self.config_helper.flush_interval_in_seconds)
 
     def test_with_high_resolution_only(self):
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITHOUT_HIGH_RESOLUTION)
-        self.assertEquals(False, self.config_helper.enable_high_definition_metrics)
+        self.assertEquals(False, self.config_helper.enable_high_resolution_metrics)
         self.assertEquals('60', self.config_helper.flush_interval_in_seconds)
 
     def test_with_proxy_server_name(self):

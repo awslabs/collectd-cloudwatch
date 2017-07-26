@@ -47,7 +47,7 @@ class ConfigHelper(object):
         self.push_asg = False
         self.push_constant = False
         self.constant_dimension_value = ''
-        self.enable_high_definition_metrics = False
+        self.enable_high_resolution_metrics = False
         self.flush_interval_in_seconds = ''
         self._load_configuration()
         self.whitelist = Whitelist(WhitelistConfigReader(self.WHITELIST_CONFIG_PATH, self.pass_through).get_regex_list(), self.BLOCKED_METRIC_PATH)
@@ -79,7 +79,7 @@ class ConfigHelper(object):
         self._load_hostname()
         self._load_proxy_server_name()
         self._load_proxy_server_port()
-        self.enable_high_definition_metrics = self.config_reader.enable_high_definition_metrics
+        self.enable_high_resolution_metrics = self.config_reader.enable_high_resolution_metrics
         self._load_flush_interval_in_seconds()
         self._set_endpoint()
         self._set_ec2_endpoint()
