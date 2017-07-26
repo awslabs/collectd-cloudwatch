@@ -12,13 +12,14 @@ Depending on the version of collectd installed on the host we provide the follow
 3. any other version of collectd is not supported.
 """
 
+import errno
 import os
 import platform
 import re
 import shlex
 import shutil
+import sys
 import time
-import errno
 from collections import namedtuple
 from distutils.version import LooseVersion
 from glob import glob
@@ -41,10 +42,10 @@ PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudw
 PLUGIN_CONFIGURATION_INCLUDE_LINE = 'Include "/etc/collectd-cloudwatch.conf"\r\n'
 APT_INSTALL_COMMAND = "apt-get install -y "
 YUM_INSTALL_COMMAND = "yum install -y "
-SYSTEM_DEPENDENCIES = ["python-pip", "python-setuptools"]
-PIP_INSTALLATION_FLAGS = " install --quiet --upgrade --force-reinstall "
-EASY_INSTALL_COMMAND = "easy_install -U --quiet "
-PYTHON_DEPENDENCIES = ["requests"]
+SYSTEM_DEPENDENCIES = []
+PIP_INSTALL_COMMAND = sys.executable + " -m pip install --quiet --upgrade --force-reinstall "
+EASY_INSTALL_COMMAND = sys.executable + " -m easy_install -U --quiet "
+PYTHON_DEPENDENCIES = ["requests>=2.4.0"]
 FIND_COMMAND = "which {} 2> /dev/null"
 COLLECTD_HELP_ARGS = "-help"
 CONFIG_FILE_REGEX = re.compile("\sConfig file\s*(.*)\s")
@@ -238,22 +239,24 @@ class MetadataRequestException(Exception):
 
 
 def install_python_packages(packages):
-    try:
-        Command(detect_pip() + PIP_INSTALLATION_FLAGS + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
-    except CalledProcessError:
-        Command(EASY_INSTALL_COMMAND + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
+    if packages:
+        try:
+            detect_pip()
+        except CalledProcessError:
+            command = Command(EASY_INSTALL_COMMAND + " ".join(packages), "Installing python dependencies", exit_on_failure=True)
+        else:
+            command = Command(PIP_INSTALL_COMMAND + " ".join(packages), "Installing python dependencies", exit_on_failure=True)
+        command.run()
 
 
 def detect_pip():
-    try:
-        return get_path_to_executable("pip")
-    except CalledProcessError:
-        return get_path_to_executable("python-pip")
+    Command("{} -m pip".format(sys.executable), "Checking if pip is installed").run()
 
 
 def install_packages(packages):
-    command = DISTRIBUTION_TO_INSTALLER[detect_linux_distribution()] + " ".join(packages)
-    Command(command, "Installing dependencies").run()
+    if packages:
+        command = DISTRIBUTION_TO_INSTALLER[detect_linux_distribution()] + " ".join(packages)
+        Command(command, "Installing dependencies").run()
 
 
 def detect_linux_distribution():
