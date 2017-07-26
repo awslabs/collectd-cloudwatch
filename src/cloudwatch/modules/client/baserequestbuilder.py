@@ -17,7 +17,7 @@ class BaseRequestBuilder(object):
     _ALGORITHM = "AWS4-HMAC-SHA256"
     _V4_TERMINATOR = "aws4_request"
     
-    def __init__(self, credentials, region, service, action, api_version):
+    def __init__(self, credentials, region, service, action, api_version, enable_high_resolution_metrics=False):
         self.credentials = credentials
         self.region = region
         self.datestamp = None
@@ -26,10 +26,9 @@ class BaseRequestBuilder(object):
         self.api_version = api_version
         self.aws_timestamp = None
         self.payload = ""  # for HTTP GET payload is always empty
-        self.querystring_builder = QuerystringBuilder()
+        self.querystring_builder = QuerystringBuilder(enable_high_resolution_metrics)
         self.signer = Signer(credentials, region, self.service, self._ALGORITHM)
-    
-    
+
     def _init_timestamps(self):
         """ Initializes timestamp and datestamp values """ 
         self.datestamp = get_datestamp()

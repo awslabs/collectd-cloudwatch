@@ -6,7 +6,7 @@ from cloudwatch.modules.metricdata import MetricDataStatistic
 class QuerystringBuilderTest(unittest.TestCase):
     
     def setUp(self):
-        self.builder = QuerystringBuilder()
+        self.builder = QuerystringBuilder(None)
         
     def test_build_metric_map_for_single_metric_without_dimensions(self):
         metric = MetricDataStatistic("test_metric", statistic_values=MetricDataStatistic.Statistics(20))
@@ -56,7 +56,14 @@ class QuerystringBuilderTest(unittest.TestCase):
         expected_map.update(self.builder._build_metric_map([metric1, metric2]))
         querystring = self.builder.build_querystring([metric1, metric2], get_canonical_map())
         assert_querystring(expected_map, querystring)
-    
+
+    def test_build_querystring_with_storage_resolution(self):
+        self.builder = QuerystringBuilder(True)
+        dimensions1 = {"Dimension1": 20, "Dimension2": 30, "Host": "localhost"}
+        metric1 = MetricDataStatistic("test_metric", statistic_values=MetricDataStatistic.Statistics(20), dimensions=dimensions1)
+        querystring = self.builder.build_querystring([metric1], get_canonical_map())
+        self.assertTrue(self.builder._STORAGE_RESOLUTION in querystring)
+
     def test_build_map_with_statistics(self):
         dimensions1 = { "Dimension1": 20, "Dimension2": 30, "Host": "localhost" }
         metric = MetricDataStatistic("test_metric", dimensions=dimensions1)

@@ -23,6 +23,7 @@ class ConfigReader(object):
 
     _LOGGER = get_logger(__name__)
     _DEBUG_DEFAULT_VALUE = False
+    _ENABLE_HIGH_DEFINITION_METRICS_DEFAULT_VALUE = False
     _PASS_THROUGH_DEFAULT_VALUE = False
     _PUSH_ASG_DEFAULT_VALUE = False
     _PUSH_CONSTANT_DEFAULT_VALUE = False
@@ -36,6 +37,8 @@ class ConfigReader(object):
     CONSTANT_DIMENSION_KEY = "constant_dimension_value"
     PROXY_SERVER_NAME_KEY = "proxy_server_name"
     PROXY_SERVER_PORT_KEY = "proxy_server_port"
+    ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
+    FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
 
     def __init__(self, config_path):
         self.config_path = config_path
@@ -47,6 +50,10 @@ class ConfigReader(object):
         self.push_asg = self._PUSH_ASG_DEFAULT_VALUE
         self.push_constant = self._PUSH_CONSTANT_DEFAULT_VALUE
         self.constant_dimension_value = ''
+        self.proxy_server_name=''
+        self.proxy_server_port = ''
+        self.enable_high_resolution_metrics = self._ENABLE_HIGH_DEFINITION_METRICS_DEFAULT_VALUE
+        self.flush_interval_in_seconds = ''
         try:
             self.reader_utils = ReaderUtils(config_path)
             self._parse_config_file()
@@ -64,6 +71,8 @@ class ConfigReader(object):
         self.region = self.reader_utils.get_string(self.REGION_CONFIG_KEY)
         self.proxy_server_name = self.reader_utils.get_string(self.PROXY_SERVER_NAME_KEY)
         self.proxy_server_port = self.reader_utils.get_string(self.PROXY_SERVER_PORT_KEY)
+        self.enable_high_resolution_metrics = self.reader_utils.try_get_boolean(self.ENABLE_HIGH_DEFINITION_METRICS, self._ENABLE_HIGH_DEFINITION_METRICS_DEFAULT_VALUE)
+        self.flush_interval_in_seconds = self.reader_utils.get_string(self.FLUSH_INTERVAL_IN_SECONDS)
         self.pass_through = self.reader_utils.try_get_boolean(self.PASS_THROUGH_CONFIG_KEY, self._PASS_THROUGH_DEFAULT_VALUE)
         self.debug = self.reader_utils.try_get_boolean(self.DEBUG_CONFIG_KEY, self._DEBUG_DEFAULT_VALUE)
         self.push_asg = self.reader_utils.try_get_boolean(self.PUSH_ASG_KEY, self._PUSH_ASG_DEFAULT_VALUE)
