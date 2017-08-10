@@ -274,6 +274,7 @@ def make_dirs(directory):
 
 class PluginConfig(object):
     CREDENTIALS_PATH_KEY = "credentials_path"
+    ARN_ROLE_KEY = "arn_role"
     REGION_KEY = "region"
     HOST_KEY = "host"
     PROXY_SERVER_NAME = "proxy_server_name"
@@ -288,10 +289,11 @@ class PluginConfig(object):
     ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
     FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
 
-    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None, enable_high_resolution_metrics=False, flush_interval_in_seconds=None):
+    def __init__(self, credentials_path=None, access_key=None, secret_key=None, arn_role=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None, enable_high_resolution_metrics=False, flush_interval_in_seconds=None):
         self.credentials_path = credentials_path
         self.access_key = access_key
         self.secret_key = secret_key
+        self.arn_role = arn_role
         self.region = region
         self.host = host
         self.use_recommended_collectd_config = False
@@ -310,6 +312,9 @@ class PluginConfig(object):
 
 class InteractiveConfigurator(object):
     DEFAULT_PROMPT = "Enter choice [" + Color.green("{default}") + "]: "
+    CREDENTIAL_TYPE_IAM_ROLE = "IAM_ROLE"
+    CREDENTIAL_TYPE_IAM_USER = "IAM_USER"
+    CREDENTIAL_TYPE_STS_ASSUME_ROLE = "STS_ASSUME_ROLE"
 
     def __init__(self, plugin_config, metadata_reader, collectd_info):
         self.config = plugin_config
@@ -412,24 +417,36 @@ class InteractiveConfigurator(object):
 
     def _get_flush_interval_in_seconds(self):
         return Prompt("\nEnter the customized flush interval ([1, 60] s):", default="60", allowed_values=[str(x) for x in range(1, 61)]).run()
-
+    
+    def _get_arn_role(self):
+        self.config.arn_role = None
+        return Prompt("\nEnter arn of role used by AWS STS to get temporary credentials (e.g. arn:aws:sts::xxxxxxxxxx:assumed-role/exmaple):", default=None).run()
+        
     def _configure_credentials(self):
-        if self._is_iam_user_required():
+        cred_type = self._get_credentials_type()
+        if cred_type == InteractiveConfigurator.CREDENTIAL_TYPE_IAM_USER:
             self.config.credentials_path = self._get_credentials_path()
             self.config.credentials_file_exist = path.exists(self.config.credentials_path)
             if not self.config.credentials_file_exist:
                 self.config.access_key = Prompt(message="Enter access key: ").run()
                 self.config.secret_key = Prompt(message="Enter secret key: ").run()
+        elif cred_type == InteractiveConfigurator.CREDENTIAL_TYPE_STS_ASSUME_ROLE:
+            self.config.arn_role = self._get_arn_role()
 
-    def _is_iam_user_required(self):
+    def _get_credentials_type(self):
         try:
             iam_role = self.metadata_reader.get_iam_role_name()
-            answer = Prompt("\nChoose authentication method:", ["IAM Role [" + iam_role + "]", "IAM User"], default="1").run()
-            return answer == "2"
+            answer = Prompt("\nChoose authentication method:", ["IAM Role [" + iam_role + "]", "IAM User", "Assume Role (AWS STS)"], default="1").run()
+            if answer == "2":
+                return InteractiveConfigurator.CREDENTIAL_TYPE_IAM_USER
+            elif answer == "3":
+                return InteractiveConfigurator.CREDENTIAL_TYPE_STS_ASSUME_ROLE
+            else:
+                return InteractiveConfigurator.CREDENTIAL_TYPE_IAM_ROLE
         except MetadataRequestException:
             print(Color.yellow("\nIAM Role could not be automatically detected."))
-            return True
-
+            return InteractiveConfigurator.CREDENTIAL_TYPE_IAM_USER
+            
     def _get_credentials_path(self):
         recommended_path = path.expanduser('~') + '/.aws/credentials'
         creds_path = ""
@@ -494,6 +511,10 @@ class Prompt(object):
 class PluginConfigWriter(object):
     TEMPLATE = """# The path to the AWS credentials file. This value has to be provided if plugin is used outside of EC2 instances
 $credentials_path$
+
+# The arn of role used by sts to assuming and gets temporary credentials.
+# SEE http://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html#API_AssumeRole_Examples for more information.
+$arn_role$
 
 # The target region which will be used to publish metric data
 # For list of valid regions visit: http://docs.aws.amazon.com/general/latest/gr/rande.html#cw_region
@@ -574,6 +595,7 @@ $flush_interval_in_seconds$
         config = self._replace_with_value(config, self.plugin_config.PUSH_ASG_KEY, self.plugin_config.push_asg)
         config = self._replace_with_value(config, self.plugin_config.PUSH_CONSTANT_KEY, self.plugin_config.push_constant)
         config = self._replace_with_value(config, self.plugin_config.CONSTANT_DIMENSION_VALUE_KEY, self.plugin_config.constant_dimension_value)
+        config = self._replace_with_value(config, self.plugin_config.ARN_ROLE_KEY, self.plugin_config.arn_role)
         return config
 
     def _replace_with_value(self, string, key, value):
