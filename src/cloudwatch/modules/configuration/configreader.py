@@ -27,6 +27,7 @@ class ConfigReader(object):
     _PASS_THROUGH_DEFAULT_VALUE = False
     _PUSH_ASG_DEFAULT_VALUE = False
     _PUSH_CONSTANT_DEFAULT_VALUE = False
+    ARN_ROLE_CONFIG_KEY = "arn_role"
     REGION_CONFIG_KEY = "region"
     HOST_CONFIG_KEY = "host"
     CREDENTIALS_PATH_KEY = "credentials_path"
@@ -43,6 +44,7 @@ class ConfigReader(object):
     def __init__(self, config_path):
         self.config_path = config_path
         self.credentials_path = ""
+        self.arn_role = ''
         self.region = ''
         self.host = ''
         self.pass_through = self._PASS_THROUGH_DEFAULT_VALUE
@@ -67,6 +69,7 @@ class ConfigReader(object):
         in format ['key=value', 'key2=value2'] 
         """
         self.credentials_path = self.reader_utils.get_string(self.CREDENTIALS_PATH_KEY)
+        self.arn_role = self.reader_utils.get_string(self.ARN_ROLE_CONFIG_KEY)
         self.host = self.reader_utils.get_string(self.HOST_CONFIG_KEY)
         self.region = self.reader_utils.get_string(self.REGION_CONFIG_KEY)
         self.proxy_server_name = self.reader_utils.get_string(self.PROXY_SERVER_NAME_KEY)
