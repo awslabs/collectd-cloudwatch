@@ -208,4 +208,3 @@ def assert_credentials(credentials, expected_access=ConfigHelperTest.VALID_ACCES
     assert credentials.access_key == expected_access
     assert credentials.secret_key == expected_secret
     assert credentials.token == expected_token
-
