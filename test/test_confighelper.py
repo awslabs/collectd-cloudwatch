@@ -1,12 +1,13 @@
 import unittest
 
 from mock import Mock
+from datetime import datetime
 
 import cloudwatch.modules.collectd as collectd
 from cloudwatch.modules.configuration.confighelper import ConfigHelper
 from cloudwatch.modules.configuration.metadatareader import MetadataReader
 from helpers.fake_http_server import FakeServer
-
+from cloudwatch.modules.awscredentials import AWS_CREDENTIALS_TIMEFORMAT
 
 class ConfigHelperTest(unittest.TestCase):
     CONFIG_DIR = "./test/config_files/"
@@ -37,7 +38,8 @@ class ConfigHelperTest(unittest.TestCase):
     VALID_FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
 
     FAKE_SERVER = None
-    
+    FAKE_STS_SERVER = None
+        
     @classmethod
     def setUpClass(cls):
         cls.FAKE_SERVER = FakeServer()
@@ -166,18 +168,23 @@ class ConfigHelperTest(unittest.TestCase):
         self.assertTrue(collectd.warning.called)
 
     def test_configuration_with_iam_role_credentials(self):
-        self._load_and_assert_iam_role_credentials("ACCESS_KEY", "SECRET_KEY", "TOKEN")
+        self._load_and_assert_iam_role_credentials("ACCESS_KEY", "SECRET_KEY", "TOKEN", "2030-12-03T20:48:03Z")
     
-    def test_iam_role_creds_are_refreshed(self):
-        self._load_and_assert_iam_role_credentials("ACCESS_KEY", "SECRET_KEY", "TOKEN")
-        creds_json = '{"AccessKeyId" : "NEW_ACCESS_KEY", "SecretAccessKey" : "NEW_SECRET_KEY", "Token" : "NEW_TOKEN" }'
-        self._update_and_assert_iam_role_credentials(creds_json, "NEW_ACCESS_KEY", "NEW_SECRET_KEY", "NEW_TOKEN")
-        
+    def test_iam_role_creds_are_refreshed_on_expiration(self):
+        self._load_and_assert_iam_role_credentials("ACCESS_KEY", "SECRET_KEY", "TOKEN", "2001-12-03T20:48:03Z")
+        creds_json = '{"AccessKeyId" : "NEW_ACCESS_KEY", "SecretAccessKey" : "NEW_SECRET_KEY", "Token" : "NEW_TOKEN", "Expiration" : "2030-12-03T20:48:03Z" }'
+        self._update_and_assert_iam_role_credentials(creds_json, "NEW_ACCESS_KEY", "NEW_SECRET_KEY", "NEW_TOKEN", "2030-12-03T20:48:03Z")
+    
+    def test_iam_role_creds_not_refreshed_if_not_expired(self):
+        self._load_and_assert_iam_role_credentials("ACCESS_KEY", "SECRET_KEY", "TOKEN", "2030-12-03T20:48:03Z")
+        creds_json = '{"AccessKeyId" : "NEW_ACCESS_KEY", "SecretAccessKey" : "NEW_SECRET_KEY", "Token" : "NEW_TOKEN", "Expiration" : "2050-12-03T20:48:03Z" }'
+        self._update_and_assert_iam_role_credentials(creds_json, "ACCESS_KEY", "SECRET_KEY", "TOKEN", "2030-12-03T20:48:03Z")
+    
     def test_old_iam_role_creds_are_served_on_error(self):
-        self._load_and_assert_iam_role_credentials("ACCESS_KEY", "SECRET_KEY", "TOKEN")
+        self._load_and_assert_iam_role_credentials("ACCESS_KEY", "SECRET_KEY", "TOKEN", "2030-12-03T20:48:03Z")
         creds_json = '{"AccessKeyId" : "NEW_ACCESS_KEY", "SecretAccessKey" : "NEW_SECRET_KEY",}'
-        self._update_and_assert_iam_role_credentials(creds_json, "ACCESS_KEY", "SECRET_KEY", "TOKEN")
-
+        self._update_and_assert_iam_role_credentials(creds_json, "ACCESS_KEY", "SECRET_KEY", "TOKEN", "2030-12-03T20:48:03Z")
+    
     def test_whitelist_is_properly_configured_based_on_plugin_config_file(self):
         ConfigHelper.WHITELIST_CONFIG_PATH = self.PASS_THROUGH_WHITELIST_CONFIG
         self.config_helper = ConfigHelper(config_path=self.VALID_CONFIG_WITH_PASS_THROUGH_DISABLED)
@@ -185,18 +192,41 @@ class ConfigHelperTest(unittest.TestCase):
         self.config_helper = ConfigHelper(config_path=self.VALID_CONFIG_WITH_PASS_THROUGH_ENABLED)
         self.assertTrue(self.config_helper.whitelist.is_whitelisted("random-metric-name"))
         
-    def _load_and_assert_iam_role_credentials(self, expected_access, expected_secret, expected_token):
-        creds_json = '{"AccessKeyId" : "' + expected_access +'", "SecretAccessKey" : "' + expected_secret + '", "Token" : "' + expected_token + '" }'
+    def _load_and_assert_iam_role_credentials(self, expected_access, expected_secret, expected_token, expected_expire_at):
+        creds_json = '{"AccessKeyId" : "' + expected_access +'", "SecretAccessKey" : "' + expected_secret + '", "Token" : "' + expected_token + '", "Expiration" : "' + expected_expire_at + '" }'
         self.server.set_expected_response(creds_json, 200)
         ConfigHelper._DEFAULT_CREDENTIALS_PATH = ""
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITHOUT_CREDS,metadata_server=self.server.get_url())
-        assert_credentials(self.config_helper._credentials, expected_access, expected_secret, expected_token)
+        assert_credentials(self.config_helper._credentials, expected_access, expected_secret, expected_token, expected_expire_at)
 
-    def _update_and_assert_iam_role_credentials(self, json, expected_access, expected_secret, expected_token):
+    def _update_and_assert_iam_role_credentials(self, json, expected_access, expected_secret, expected_token, expected_expire_at):
         self.server.set_expected_response(json, 200)
         creds = self.config_helper.credentials
-        assert_credentials(creds, expected_access, expected_secret, expected_token)
-        
+        assert_credentials(creds, expected_access, expected_secret, expected_token, expected_expire_at)
+    
+    def test_overwrite_credentials_by_assuming_role_on_load(self):
+        self._load_and_assert_iam_role_credentials_with_arn_role("ACCESS_KEY", "SECRET_KEY", "TOKEN", "2030-12-03T20:48:03Z")
+            
+    def _load_and_assert_iam_role_credentials_with_arn_role(self, expected_access, expected_secret, expected_token, expected_expire_at):
+        self._load_and_assert_iam_role_credentials("E_" + expected_access, "E" + expected_secret, "E" + expected_token, "2100-12-03T20:48:03Z")
+        self.config_helper._arn_role = "arn:aws:test:eu-west-1:1111111111111:role/assume"
+        sts_cred_xml = '''
+            <AssumeRoleResponse xmlns='https://sts.amazonaws.com/doc/2011-06-15/'>
+                <AssumeRoleResult>
+                    <Credentials>
+                      <SessionToken>''' + expected_token + '''</SessionToken>
+                      <SecretAccessKey>''' + expected_secret + '''</SecretAccessKey>
+                      <Expiration>''' + expected_expire_at + '''</Expiration>
+                      <AccessKeyId>''' + expected_access + '''</AccessKeyId>
+                    </Credentials>
+                </AssumeRoleResult>
+            </AssumeRoleResponse>
+            '''
+        self.config_helper.sts_endpoint = self.server.get_url()
+        self.server.set_expected_response(sts_cred_xml, 200)
+        self.config_helper._overwrite_credentials_by_assuming_role()
+        assert_credentials(self.config_helper._credentials, expected_access, expected_secret, expected_token, expected_expire_at)
+            
     @classmethod
     def tearDownClass(cls):
         cls.FAKE_SERVER.stop_server()
@@ -204,8 +234,11 @@ class ConfigHelperTest(unittest.TestCase):
 
 
 def assert_credentials(credentials, expected_access=ConfigHelperTest.VALID_ACCESS_KEY_STRING, 
-                       expected_secret=ConfigHelperTest.VALID_SECRET_KEY_STRING, expected_token=None):
+                       expected_secret=ConfigHelperTest.VALID_SECRET_KEY_STRING, expected_token=None, expected_expire_at=None):
     assert credentials.access_key == expected_access
     assert credentials.secret_key == expected_secret
     assert credentials.token == expected_token
-
+    if expected_expire_at:
+        assert credentials.expire_at == datetime.strptime(expected_expire_at, AWS_CREDENTIALS_TIMEFORMAT)
+    else:
+        assert credentials.expire_at == None

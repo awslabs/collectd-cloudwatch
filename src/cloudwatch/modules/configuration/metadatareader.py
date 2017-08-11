@@ -43,8 +43,8 @@ class MetadataReader(object):
         """ Get the IAMRoleCredentials object with values from IAM metadata """
         try:
             iam_data = loads(self._get_metadata(self._IAM_ROLE_CREDENTIAL_REQUEST + role_name))
-            if iam_data['AccessKeyId'] and iam_data['SecretAccessKey'] and iam_data['Token']:
-                return AWSCredentials(iam_data['AccessKeyId'], iam_data['SecretAccessKey'], iam_data['Token'])
+            if iam_data['AccessKeyId'] and iam_data['SecretAccessKey'] and iam_data['Token'] and iam_data['Expiration']:
+                return AWSCredentials(iam_data['AccessKeyId'], iam_data['SecretAccessKey'], iam_data['Token'], iam_data['Expiration'])
             else:
                 raise ValueError("Incomplete credentials retrieved.")
         except Exception as e:

@@ -5,6 +5,8 @@ from metadatareader import MetadataReader
 from credentialsreader import CredentialsReader
 from whitelist import Whitelist, WhitelistConfigReader
 from ..client.ec2getclient import EC2GetClient
+from ..client.stsassumeroleclient import StsAssumRoleClient
+from ..plugininfo import PLUGIN_NAME, PLUGIN_VERSION
 import traceback
 
 class ConfigHelper(object):
@@ -35,9 +37,11 @@ class ConfigHelper(object):
         self._config_path = config_path
         self._metadata_server = metadata_server
         self._use_iam_role_credentials = False
+        self._arn_role = ''
         self.region = ''
         self.endpoint = ''
         self.ec2_endpoint = ''
+        self.sts_endpoint = ''
         self.host = ''
         self.asg_name = 'NONE'
         self.proxy_server_name = ''
@@ -58,11 +62,19 @@ class ConfigHelper(object):
         Returns credentials. If IAM role is used, credentials will be updated.
         Otherwise old credentials are returned.
         """
-        if self._use_iam_role_credentials:
+        if self._use_iam_role_credentials and self._credentials.is_expired():
             try:
                 self._credentials = self._get_credentials_from_iam_role()
             except:
                 self._LOGGER.warning("Could not retrieve credentials using IAM Role. Using old credentials instead.")
+        elif self._arn_role and self._credentials and self._credentials.is_expired():
+            try:
+                # First use iam role to query sts temporary credentials
+                self._credentials = self._get_credentials_from_iam_role()
+                self._credentials = self._get_credentials_by_sts_assuming_role()
+            except:
+                self._LOGGER.warning("Could not retrieve credentials assuming IAM Role. Using old credentials instead.")
+                    
         return self._credentials
 
     @credentials.setter
@@ -77,13 +89,16 @@ class ConfigHelper(object):
         self._load_credentials()
         self._load_region()
         self._load_hostname()
+        self._load_arn_role()
         self._load_proxy_server_name()
         self._load_proxy_server_port()
         self.enable_high_resolution_metrics = self.config_reader.enable_high_resolution_metrics
         self._load_flush_interval_in_seconds()
         self._set_endpoint()
         self._set_ec2_endpoint()
+        self._set_sts_endpoint()
         self._load_autoscaling_group()
+        self._overwrite_credentials_by_assuming_role()
         self.debug = self.config_reader.debug
         self.pass_through = self.config_reader.pass_through
         self.push_asg = self.config_reader.push_asg
@@ -107,6 +122,25 @@ class ConfigHelper(object):
             self._use_iam_role_credentials = True
             self.credentials = self._get_credentials_from_iam_role()
             
+    def _overwrite_credentials_by_assuming_role(self):
+        """
+        Tries to load and overwrite credentials with new credentials got by assuming role if 
+        any arn_role was provided.
+        """
+        if self._arn_role and self.credentials:
+            try:
+                self.credentials = self._get_credentials_by_sts_assuming_role()
+                self._use_iam_role_credentials = False
+            except Exception as e:
+                self._LOGGER.error("Failed to set credentials by assuming role. Continue by iam role credentials. Cause: " + str(e))
+                        
+    def _get_credentials_by_sts_assuming_role(self):
+        #Don't use credentials getter method, otherwise it runs in an infinit loop
+        stsAssumRoleClient = StsAssumRoleClient(self._credentials, self.sts_endpoint, self.region, self.proxy_server_name, self.proxy_server_port, self.debug)
+        duration_seconds = 3600
+        role_session_name = PLUGIN_NAME + "_v" + str(PLUGIN_VERSION)
+        return stsAssumRoleClient.get_credentials(self._arn_role, role_session_name, duration_seconds)
+                            
     def _get_credentials_from_iam_role(self):
         """ Queries IAM Role metadata for latest credentials """
         return self.metadata_reader.get_iam_role_credentials(self.metadata_reader.get_iam_role_name())
@@ -137,7 +171,14 @@ class ConfigHelper(object):
             except Exception as e:
                 ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) +  
                     " Using host information provided by Collectd.")
-
+    
+    def _load_arn_role(self):
+        """
+        Loads arn_role from plugin configuration file.
+        """
+        if self.config_reader.arn_role:
+            self._arn_role = self.config_reader.arn_role
+        
     def _set_ec2_endpoint(self):
         """ Creates endpoint from region information """
         if self.region is "localhost":
@@ -146,6 +187,15 @@ class ConfigHelper(object):
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com.cn/"
         else:
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com/"
+    
+    def _set_sts_endpoint(self):
+        """ Creates endpoint from region information """
+        if self.region is "localhost":
+            self.sts_endpoint = "http://" + self.region + "/"
+        elif self.region.startswith("cn-"):
+            self.sts_endpoint = "https://sts." + self.region + ".amazonaws.com.cn/"
+        else:
+            self.sts_endpoint = "https://sts." + self.region + ".amazonaws.com/"
 
     def _load_proxy_server_name(self):
         """
