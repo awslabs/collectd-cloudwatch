@@ -2,6 +2,7 @@ import unittest
 import requests
 from helpers.fake_http_server import FakeServer
 from cloudwatch.modules.configuration.metadatareader import MetadataReader, MetadataRequestException
+from cloudwatch.modules.awscredentials import AWS_CREDENTIALS_TIMEFORMAT
 
 class MetadataReaderTest(unittest.TestCase):
     FAKE_SERVER = None
@@ -63,6 +64,7 @@ class MetadataReaderTest(unittest.TestCase):
         self.assertEquals("ACCESS_KEY", creds.access_key)
         self.assertEquals("SECRET_KEY", creds.secret_key)
         self.assertEquals("TOKEN", creds.token)
+        self.assertEquals('2015-08-27T09:22:57Z', creds.expire_at.strftime(AWS_CREDENTIALS_TIMEFORMAT))
     
     def test_get_iam_role_credentials_raises_exception_on_invalid_json_format(self):
         json = '{"Code" - "Success", "LastUpdated" : "2015-08-27T09:22:57Z", "Type" : "AWS-HMAC", \

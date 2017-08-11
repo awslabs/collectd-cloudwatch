@@ -62,12 +62,12 @@ class ConfigHelper(object):
         Returns credentials. If IAM role is used, credentials will be updated.
         Otherwise old credentials are returned.
         """
-        if self._use_iam_role_credentials:
+        if self._use_iam_role_credentials and self._credentials.is_expired():
             try:
                 self._credentials = self._get_credentials_from_iam_role()
             except:
                 self._LOGGER.warning("Could not retrieve credentials using IAM Role. Using old credentials instead.")
-        elif self._arn_role and self._credentials:
+        elif self._arn_role and self._credentials and self._credentials.is_expired():
             try:
                 # First use iam role to query sts temporary credentials
                 self._credentials = self._get_credentials_from_iam_role()
