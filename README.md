@@ -20,6 +20,7 @@ sudo ./setup.py
 ### Plugin specific configuration
 The default location of the configuration file used by collectd-cloudwatch plugin is: `/opt/collectd-plugins/cloudwatch/config/plugin.conf`.  The parameters in this file are optional when plugin is executed on EC2 instance. This file allows modification of the following parameters:
  * __credentials_path__ - Used to point to AWS account configuration file
+ * __arn_role__ - Used when you want to explicitly assume a role using AWS STS (Security Token Service).
  * __region__ - Manual override for [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#cw_region)  used to publish metrics
  * __host__ - Manual override for EC2 Instance ID and Host information propagated by collectd
  * __proxy_server_name__ - Manual override for proxy server name, used by plugin to connect aws cloudwatch at *.amazonaws.com.
@@ -36,6 +37,7 @@ The default location of the configuration file used by collectd-cloudwatch plugi
 #### Example configuration file
 ```
 credentials_path = "/home/user/.aws/credentials"
+arn_role = "arn:aws:test:eu-west-1:1234567890:role/to_assume"
 region = "us-west-1"
 host = "Server1"
 proxy_server_name = "http://myproxyserver.com"
@@ -81,6 +83,12 @@ The following parameters can be configured in the above file:
 aws_access_key = valid_access_key
 aws_secret_key = valid_secret_key
 ```
+
+### Assuming role using AWS STS(Security toke service)
+By setting __arn_role__ in configuration you can explicitly assume a role. It's helpful when you want to send metrics from an account to another account.
+Suppose you want send a metric from an EC2 instance in `account_A` to cloudwatch in `account_B`. Then, You should define a role in the `account_A` with
+proper policies accessing cloudwatch of the `account A` and then create another role in the `account B` with a policy which grants assuming role already
+defined in the `account_A`. Finally, attached the later role one to your EC2 IAM role. For more information visit [aws sts assume role](http://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html) documentation.
 
 ### Whitelist configuration
 The CloudWatch collectd plugin allows users to select metrics to be published. This is done by adding metric names or regular expressions written in [python regex syntax](https://docs.python.org/2/library/re.html#regular-expression-syntax) to the whitelist config file. The default location of this configuration is: `/opt/collectd-plugins/cloudwatch/config/whitelist.conf`.
