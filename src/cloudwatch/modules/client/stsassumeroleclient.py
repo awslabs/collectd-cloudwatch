@@ -59,8 +59,9 @@ class StsAssumRoleClient(object):
             cred["session_token"] = cred_xml.find('sts:SessionToken', ns).text.strip()
             cred["secret_access_key"] = cred_xml.find('sts:SecretAccessKey', ns).text.strip()
             cred["access_key_id"] = cred_xml.find('sts:AccessKeyId', ns).text.strip()
+            cred["expiration"] = cred_xml.find('sts:Expiration', ns).text.strip()
             
-            if not cred["session_token"] or not cred['secret_access_key'] or not cred["access_key_id"]:
+            if not cred["session_token"] or not cred['secret_access_key'] or not cred["access_key_id"] or not cred["expiration"]:
                 raise ValueError("Incomplete credentials retrieved.")
         except RequestException as e:
             self._LOGGER.warning("Could not assume '" + arn_role + "' using the following endpoint: '" + self.endpoint +"'. [Exception: " + str(e) + "]")
@@ -69,7 +70,7 @@ class StsAssumRoleClient(object):
         except Exception as e:
             raise ValueError(e)
                 
-        return AWSCredentials(cred['access_key_id'], cred['secret_access_key'], cred["session_token"])
+        return AWSCredentials(cred['access_key_id'], cred['secret_access_key'], cred["session_token"], cred["expiration"])
 
     def _prepare_session(self):
         self.session = Session()

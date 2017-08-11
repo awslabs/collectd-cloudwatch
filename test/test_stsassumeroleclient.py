@@ -19,7 +19,7 @@ class StsAssumRoleClientTest(unittest.TestCase):
                 <Credentials>
                   <SessionToken>token_test</SessionToken>
                   <SecretAccessKey>secret_key_test</SecretAccessKey>
-                  <Expiration>2011-07-15T23:28:33.359Z</Expiration>
+                  <Expiration>2011-07-15T23:28:33Z</Expiration>
                   <AccessKeyId>access_key_test</AccessKeyId>
                 </Credentials>
             </AssumeRoleResult>
@@ -149,7 +149,7 @@ class StsAssumRoleClientTest(unittest.TestCase):
               <SecretAccessKey>
                ''' + expected_credential.secret_key + '''
               </SecretAccessKey>
-              <Expiration>2011-07-15T23:28:33.359Z</Expiration>
+              <Expiration>2011-07-15T23:28:39Z</Expiration>
               <AccessKeyId>
               ''' + expected_credential.access_key + '''
               </AccessKeyId>
