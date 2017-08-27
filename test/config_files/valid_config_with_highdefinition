@@ -1,0 +1,7 @@
+credentials_path = ./test/config_files/valid_credentials_file
+region = valid_region
+host = valid_host
+whitelist_pass_through = true
+debug = false
+enable_high_resolution_metrics = true
+flush_interval_in_seconds = 60

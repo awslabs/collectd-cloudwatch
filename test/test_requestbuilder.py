@@ -12,7 +12,7 @@ class RequestBuilderTest(unittest.TestCase):
         self.region = "test_region"
         self.namespace = "test_namespace"
         self.credentials = AWSCredentials("access_key", "secret_key")
-        self.builder = RequestBuilder(self.credentials, self.region)
+        self.builder = RequestBuilder(self.credentials, self.region, "10")
         
     def test_get_host(self):
         self.assertEquals("monitoring." + self.region +".amazonaws.com", self.builder._get_host())
@@ -54,14 +54,14 @@ class RequestBuilderTest(unittest.TestCase):
         self.assertTrue("X-Amz-SignedHeaders" in request)
         
     def test_create_signed_request_with_iam_role_has_token_parameter(self):
-        self.builder = RequestBuilder(AWSCredentials("access_key", "secret_key", "token"), self.region)
+        self.builder = RequestBuilder(AWSCredentials("access_key", "secret_key", "token"), self.region, "10")
         metric = MetricDataStatistic("test_metric", statistic_values=MetricDataStatistic.Statistics(20))
         request = self.builder.create_signed_request(self.namespace, [metric])
         self.assertTrue("X-Amz-Security-Token" in request)
         
     def test_canonical_querystring_is_directly_created_by_querystring_builder(self):
         self.builder._init_timestamps()
-        querystring_builder = QuerystringBuilder()
+        querystring_builder = QuerystringBuilder("10")
         metric = MetricDataStatistic("test_metric", statistic_values=MetricDataStatistic.Statistics(20))
         original_querystring = querystring_builder.build_querystring([metric], self.builder._get_request_map())
         generated_querystring = self.builder._create_canonical_querystring([metric])
