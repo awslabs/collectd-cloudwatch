@@ -136,6 +136,8 @@ class NonInteractiveTests(unittest.TestCase):
     host = 'test_host'
     proxy_name = 'test_proxy'
     proxy_port = 'test_proxy_port'
+    enable_high_resolution_metrics = True
+    flush_interval_in_seconds = 30
     access_key = 'test_access_key'
     secret_key = 'test_secret_key'
     installation_method = 'recommended'
@@ -154,6 +156,8 @@ class NonInteractiveTests(unittest.TestCase):
                                                                       self.collectd_info,
                                                                       self.non_interactive, self.region,
                                                                       self.host, self.proxy_name, self.proxy_port,
+                                                                      self.enable_high_resolution_metrics,
+                                                                      self.flush_interval_in_seconds,
                                                                       self.access_key, self.secret_key,
                                                                       self.creds_path, self.installation_method,
                                                                       self.push_asg, self.push_constant,
@@ -170,6 +174,14 @@ class NonInteractiveTests(unittest.TestCase):
 
         non_interactive_installer._configure_proxy_server_port_non_interactive()
         self.assertEquals(self.plugin_config.proxy_server_port, self.proxy_port)
+
+        non_interactive_installer._configure_enable_high_resolution_metrics_non_interactive()
+        self.assertEquals(self.plugin_config.enable_high_resolution_metrics,
+                          self.enable_high_resolution_metrics)
+
+        non_interactive_installer._configure_flush_interval_in_seconds_non_interactive()
+        self.assertEquals(self.plugin_config.flush_interval_in_seconds,
+                          self.flush_interval_in_seconds)
 
         non_interactive_installer._configure_credentials_non_interactive()
         self.assertEquals(self.plugin_config.access_key, self.access_key)

@@ -317,9 +317,12 @@ class PluginConfig(object):
 class InteractiveConfigurator(object):
     DEFAULT_PROMPT = "Enter choice [" + Color.green("{default}") + "]: "
 
-    def __init__(self, plugin_config, metadata_reader, collectd_info, non_interactive, region, host,
-                 proxy_name, proxy_port, access_key, secret_key, creds_path, installation_method,push_asg,
-                 push_constant, dimension_value, debug_setup, debug):
+    def __init__(self, plugin_config, metadata_reader, collectd_info,
+                 non_interactive, region, host, proxy_name, proxy_port,
+                 enable_high_resolution_metrics, flush_interval_in_seconds,
+                 access_key, secret_key, creds_path,
+                 installation_method, push_asg, push_constant, dimension_value,
+                 debug_setup, debug):
         self.config = plugin_config
         self.metadata_reader = metadata_reader
         self.collectd_info = collectd_info
@@ -328,6 +331,8 @@ class InteractiveConfigurator(object):
         self.host = host
         self.proxy_name = proxy_name
         self.proxy_port = proxy_port
+        self.enable_high_resolution_metrics = enable_high_resolution_metrics
+        self.flush_interval_in_seconds = flush_interval_in_seconds
         self.access_key = access_key
         self.secret_key = secret_key
         self.creds_path = creds_path
@@ -347,6 +352,8 @@ class InteractiveConfigurator(object):
             self._configure_proxy_server_port_non_interactive()
             self._configure_push_asg_non_interactive()
             self._configure_push_constant_non_interactive()
+            self._configure_enable_high_resolution_metrics_non_interactive()
+            self._configure_flush_interval_in_seconds_non_interactive()
             self._configure_plugin_installation_method_non_interactive()
             self._configure_debug_non_interactive()
             if self.debug_setup:
@@ -475,15 +482,11 @@ class InteractiveConfigurator(object):
         self.config.proxy_server_port = None
         return Prompt("\nEnter proxy server port (e.g. 8080):", default=None).run()
 
-    def _configure_credentials_non_interactive(self):
-        if self.access_key and self.secret_key:
-            self.config.credentials_path = self._get_credentials_path()
-            print "self.config.credentials_path = ", self.config.credentials_path
-        self.config.credentials_file_exist = path.exists(str(self.config.credentials_path))
-        print "self.config.credentials_file_exist = ", self.config.credentials_file_exist
-        if not self.config.credentials_file_exist:
-            self.config.access_key = self.access_key
-            self.config.secret_key = self.secret_key
+    def _configure_enable_high_resolution_metrics_non_interactive(self):
+        if self.enable_high_resolution_metrics:
+            self.config.enable_high_resolution_metrics = True
+        else:
+            self.config.enable_high_resolution_metrics = False
 
     def _configure_enable_high_resolution_metrics(self):
         choice = Prompt("\nEnable high resolution:", options=["Yes", "No"], default="2").run()
@@ -491,6 +494,12 @@ class InteractiveConfigurator(object):
             self.config.enable_high_resolution_metrics = True
         elif choice == "2" :
             self.config.enable_high_resolution_metrics = False
+
+    def _configure_flush_interval_in_seconds_non_interactive(self):
+        if self.flush_interval_in_seconds:
+            self.config.flush_interval_in_seconds = self.flush_interval_in_seconds
+        else:
+            self.config.flush_interval_in_seconds = 60
 
     def _configure_flush_interval_in_seconds(self):
         choice = Prompt("\nEnter flush internal:", options=["Default 60s", "Custom"], default="1").run()
@@ -501,6 +510,16 @@ class InteractiveConfigurator(object):
 
     def _get_flush_interval_in_seconds(self):
         return Prompt("\nEnter the customized flush interval ([1, 60] s):", default="60", allowed_values=[str(x) for x in range(1, 61)]).run()
+
+    def _configure_credentials_non_interactive(self):
+        if self.access_key and self.secret_key:
+            self.config.credentials_path = self._get_credentials_path()
+            print "self.config.credentials_path = ", self.config.credentials_path
+        self.config.credentials_file_exist = path.exists(str(self.config.credentials_path))
+        print "self.config.credentials_file_exist = ", self.config.credentials_file_exist
+        if not self.config.credentials_file_exist:
+            self.config.access_key = self.access_key
+            self.config.secret_key = self.secret_key
 
     def _configure_credentials(self):
         if self._is_iam_user_required():
@@ -756,6 +775,16 @@ def main():
         metavar='PORT', default=None
     )
     parser.add_argument(
+        '-e', '--enable_high_resolution_metrics', required=False,
+        help='Enable high resolution metrics',
+        metavar='ENABLE_HIGH_RESOLUTION_METRICS', default=None
+    )
+    parser.add_argument(
+        '-f', '--flush_interval', required=False,
+        help='Flush interval (in seconds)',
+        metavar='FLUSH_INTERVAL', default=None
+    )
+    parser.add_argument(
         '-a', '--access_key', required=False,
         help='AWS IAM user access key',
         metavar='ACCESS_KEY', default=None
@@ -819,6 +848,8 @@ def main():
     region = args.region
     proxy_name = args.proxy_name
     proxy_port = args.proxy_port
+    enable_high_resolution_metrics = args.enable_high_resolution_metrics
+    flush_interval = args.flush_interval
     access_key = args.access_key
     secret_key = args.secret_key
     creds_path = args.creds_path
@@ -868,9 +899,13 @@ def main():
 
     def _prepare_plugin_config(plugin_config):
         metadata_reader = MetadataReader()
-        InteractiveConfigurator(plugin_config, metadata_reader, COLLECTD_INFO, non_interactive, region, host,
-                                proxy_name, proxy_port, access_key, secret_key, creds_path,installation_method, push_asg,
-                                push_constant, dimension_value, debug_setup, debug).run()
+        InteractiveConfigurator(plugin_config, metadata_reader, COLLECTD_INFO,
+                                non_interactive, region, host, proxy_name,
+                                proxy_port, enable_high_resolution_metrics,
+                                flush_interval, access_key, secret_key,
+                                creds_path, installation_method, push_asg,
+                                push_constant, dimension_value, debug_setup,
+                                debug).run()
         PluginConfigWriter(plugin_config).write()
 
     def _inject_plugin_configuration():
