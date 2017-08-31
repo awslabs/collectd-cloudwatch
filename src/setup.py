@@ -597,6 +597,10 @@ class InteractiveConfigurator(object):
         logger.info('HOST: {}'.format(self.config.host))
         logger.info('PROXY NAME: {}'.format(self.config.proxy_server_name))
         logger.info('PROXY PORT: {}'.format(self.config.proxy_server_port))
+        logger.info('ENABLE HIGH RESOLUTION METRICS: {}'.format(
+            self.config.enable_high_resolution_metrics))
+        logger.info('FLUSH INTERVAL IN SECONDS: {}'.format(
+            self.config.flush_interval_in_seconds))
         logger.info('CREDENTIALS PATH: {}'.format(self.config.credentials_path))
         logger.info('METHOD ONLY ADD PLUGIN: {}'.format(self.config.only_add_plugin))
         logger.info('USE RECOMMENDED CONFIG: {}'.format(self.config.use_recommended_collectd_config))
@@ -777,7 +781,7 @@ def main():
     parser.add_argument(
         '-e', '--enable_high_resolution_metrics', required=False,
         help='Enable high resolution metrics',
-        metavar='ENABLE_HIGH_RESOLUTION_METRICS', default=None
+        metavar='ENABLE_HIGH_RESOLUTION_METRICS', default=False
     )
     parser.add_argument(
         '-f', '--flush_interval', required=False,
