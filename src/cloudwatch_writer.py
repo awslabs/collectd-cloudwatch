@@ -4,7 +4,8 @@ CollectdCloudWatchPlugin plugin
 try:
     import collectd # this will be in python path when running from collectd
 except:
-    import cloudwatch.modules.collectd as collectd
+    import cloudwatch.modules.collectd_stub as collectd
+
 import traceback
 
 from cloudwatch.modules.configuration.confighelper import ConfigHelper

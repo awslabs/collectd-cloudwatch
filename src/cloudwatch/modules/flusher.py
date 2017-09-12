@@ -7,6 +7,12 @@ from client.putclient import PutClient
 from logger.logger import get_logger
 from metricdata import MetricDataStatistic, MetricDataBuilder
 
+try:
+    import collectd  # this will be in python path when running from collectd
+except:
+    import cloudwatch.modules.collectd_stub as collectd
+
+
 class Flusher(object):
     """
     The flusher is responsible for translating Collectd metrics to CloudWatch MetricDataStatistic, 
@@ -33,6 +39,7 @@ class Flusher(object):
         self.flush_interval_in_seconds = int(config_helper.flush_interval_in_seconds if config_helper.flush_interval_in_seconds else self._FLUSH_INTERVAL_IN_SECONDS)
         self.max_metrics_to_aggregate = self._MAX_METRICS_PER_PUT_REQUEST if self.enable_high_resolution_metrics else self._MAX_METRICS_TO_AGGREGATE
         self.client = PutClient(self.config)
+        self._valuetype_map = {}
 
     def is_numerical_value(self, value):
         """
@@ -48,6 +55,41 @@ class Flusher(object):
         except ValueError:
             return False
 
+    def _resolve_ds(self, value_list):
+        if value_list.type not in self._valuetype_map:
+            try:
+                resolved_ds = collectd.get_dataset(value_list.type)
+                self._valuetype_map[value_list.type] = [x[0] for x in resolved_ds]
+            except Exception as e:
+                self._LOGGER.info('Failed to load datasource info for {ds_type}: {ex}'.format(
+                    ds_type=value_list.type,
+                    ex=e
+                ))
+                self._valuetype_map[value_list.type] = ['value{}'.format(i) for i in range(len(value_list.values))]
+
+        return self._valuetype_map.get(value_list.type)
+
+    def _expand_value_list(self, value_list):
+        if len(value_list.values) == 1:
+            return [value_list]
+
+        expanded = []
+        for ds_name, value in zip(self._resolve_ds(value_list), value_list.values):
+
+            new_value = value_list.__class__(
+                host=value_list.host,
+                plugin=value_list.plugin,
+                plugin_instance=value_list.plugin_instance,
+                type=value_list.type,
+                type_instance=value_list.type_instance + '.{}'.format(ds_name) if value_list.type_instance else ds_name,
+                time=value_list.time,
+                interval=value_list.interval,
+                meta=value_list.meta
+            )
+            expanded.append(new_value)
+
+        return expanded
+
     def add_metric(self, value_list):
         """
         Translates Collectd metrics to CloudWatch format and stores them in flusher for further processing
@@ -60,8 +102,12 @@ class Flusher(object):
             # The flush operation should take place before adding metric for a new minute.
             # Together with flush delta this ensures that old metrics are flushed before or at the start of a new minute.
             self._flush_if_need(time.time())
-            if self.config.whitelist.is_whitelisted(self._get_metric_key(value_list)):
-                self._aggregate_metric(value_list)
+
+            for value in self._expand_value_list(value_list):
+                self._LOGGER.debug('adding {}'.format(value_list))
+
+                if self.config.whitelist.is_whitelisted(self._get_metric_key(value)):
+                        self._aggregate_metric(value)
 
     def _flush_if_need(self, current_time):
         """ 

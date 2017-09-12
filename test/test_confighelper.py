@@ -2,7 +2,7 @@ import unittest
 
 from mock import Mock
 
-import cloudwatch.modules.collectd as collectd
+import cloudwatch.modules.collectd_stub as collectd
 from cloudwatch.modules.configuration.confighelper import ConfigHelper
 from cloudwatch.modules.configuration.metadatareader import MetadataReader
 from helpers.fake_http_server import FakeServer

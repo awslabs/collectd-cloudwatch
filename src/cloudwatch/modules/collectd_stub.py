@@ -22,3 +22,6 @@ def warning(msg):
 
 def error(msg):
     pass
+
+def get_dataset(dataset_name):
+    pass
