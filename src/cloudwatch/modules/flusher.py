@@ -84,7 +84,8 @@ class Flusher(object):
                 type_instance=value_list.type_instance + '.{}'.format(ds_name) if value_list.type_instance else ds_name,
                 time=value_list.time,
                 interval=value_list.interval,
-                meta=value_list.meta
+                meta=value_list.meta,
+                values=[value]
             )
             expanded.append(new_value)
 
