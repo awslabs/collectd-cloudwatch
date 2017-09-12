@@ -105,8 +105,6 @@ class Flusher(object):
             self._flush_if_need(time.time())
 
             for value in self._expand_value_list(value_list):
-                self._LOGGER.debug('adding {}'.format(value_list))
-
                 if self.config.whitelist.is_whitelisted(self._get_metric_key(value)):
                         self._aggregate_metric(value)
 
