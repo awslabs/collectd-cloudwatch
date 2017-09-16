@@ -781,7 +781,7 @@ def main():
     parser.add_argument(
         '-e', '--enable_high_resolution_metrics', required=False,
         help='Enable high resolution metrics',
-        metavar='ENABLE_HIGH_RESOLUTION_METRICS', default=False
+        default=False, action='store_true'
     )
     parser.add_argument(
         '-f', '--flush_interval', required=False,
@@ -812,7 +812,7 @@ def main():
     parser.add_argument(
         '-g', '--push_asg', required=False,
         help='Include the Auto-Scaling Group name as a metric dimension:',
-        default=None, action='store_true'
+        default=False, action='store_true'
     )
     parser.add_argument(
         '-c', '--push_constant', required=False,
