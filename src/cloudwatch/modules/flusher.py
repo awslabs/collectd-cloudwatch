@@ -7,7 +7,6 @@ from client.putclient import PutClient
 from logger.logger import get_logger
 from metricdata import MetricDataStatistic, MetricDataBuilder
 
-
 class Flusher(object):
     """
     The flusher is responsible for translating Collectd metrics to CloudWatch MetricDataStatistic, 
@@ -90,7 +89,6 @@ class Flusher(object):
             # The flush operation should take place before adding metric for a new minute.
             # Together with flush delta this ensures that old metrics are flushed before or at the start of a new minute.
             self._flush_if_need(time.time())
-
             for value in self._expand_value_list(value_list):
                 if self.config.whitelist.is_whitelisted(self._get_metric_key(value)):
                         self._aggregate_metric(value)
