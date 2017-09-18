@@ -7,11 +7,6 @@ from client.putclient import PutClient
 from logger.logger import get_logger
 from metricdata import MetricDataStatistic, MetricDataBuilder
 
-try:
-    import collectd  # this will be in python path when running from collectd
-except:
-    import cloudwatch.modules.collectd_stub as collectd
-
 
 class Flusher(object):
     """
@@ -28,7 +23,7 @@ class Flusher(object):
     _MAX_METRICS_PER_PUT_REQUEST = 20
     _MAX_METRICS_TO_AGGREGATE = 2000 
 
-    def __init__(self, config_helper):
+    def __init__(self, config_helper, dataset_resolver):
         self.lock = threading.Lock()
         self.client = None
         self.config = config_helper
@@ -39,7 +34,7 @@ class Flusher(object):
         self.flush_interval_in_seconds = int(config_helper.flush_interval_in_seconds if config_helper.flush_interval_in_seconds else self._FLUSH_INTERVAL_IN_SECONDS)
         self.max_metrics_to_aggregate = self._MAX_METRICS_PER_PUT_REQUEST if self.enable_high_resolution_metrics else self._MAX_METRICS_TO_AGGREGATE
         self.client = PutClient(self.config)
-        self._valuetype_map = {}
+        self._dataset_resolver = dataset_resolver
 
     def is_numerical_value(self, value):
         """
@@ -55,27 +50,19 @@ class Flusher(object):
         except ValueError:
             return False
 
-    def _resolve_ds(self, value_list):
-        if value_list.type not in self._valuetype_map:
-            try:
-                resolved_ds = collectd.get_dataset(value_list.type)
-                self._valuetype_map[value_list.type] = [x[0] for x in resolved_ds]
-            except Exception as e:
-                self._LOGGER.info('Failed to load datasource info for {ds_type}: {ex}'.format(
-                    ds_type=value_list.type,
-                    ex=e
-                ))
-                self._valuetype_map[value_list.type] = ['value{}'.format(i) for i in range(len(value_list.values))]
+    def _resolve_ds_names(self, value_list):
+        ds_names = self._dataset_resolver.get_dataset_names(value_list.type)
+        if not ds_names:
+            return ['value{}'.format(i) for i in range(len(value_list.values))]
 
-        return self._valuetype_map.get(value_list.type)
+        return ds_names
 
     def _expand_value_list(self, value_list):
         if len(value_list.values) == 1:
             return [value_list]
 
         expanded = []
-        for ds_name, value in zip(self._resolve_ds(value_list), value_list.values):
-
+        for ds_name, value in zip(self._resolve_ds_names(value_list), value_list.values):
             new_value = value_list.__class__(
                 host=value_list.host,
                 plugin=value_list.plugin,

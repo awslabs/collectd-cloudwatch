@@ -1,5 +1,5 @@
 import unittest
-import cloudwatch.modules.collectd_stub as collectd
+import cloudwatch.modules.collectd as collectd
 
 from mock import Mock
 from cloudwatch.modules.logger.logger import get_logger, _Logger, _CollectdLogger

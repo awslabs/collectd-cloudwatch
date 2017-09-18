@@ -2,7 +2,7 @@ import abc
 try:
     import collectd
 except:
-    from .. import collectd_stub as collectd
+    from .. import collectd as collectd
 
 
 def get_logger(channel=None):
