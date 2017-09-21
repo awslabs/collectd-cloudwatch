@@ -1,6 +1,8 @@
 """
 CollectdCloudWatchPlugin plugin
 """
+from cloudwatch.modules.collectd_integration.dataset import get_dataset_resolver
+
 try:
     import collectd # this will be in python path when running from collectd
 except:
@@ -20,7 +22,7 @@ def aws_init():
     """
     try:
         config = ConfigHelper()
-        flusher = Flusher(config)
+        flusher = Flusher(config_helper=config,  dataset_resolver=get_dataset_resolver())
         collectd.register_write(aws_write, data = flusher)
         _LOGGER.info('Initialization finished successfully.')
     except Exception as e:
