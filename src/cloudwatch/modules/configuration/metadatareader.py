@@ -23,6 +23,8 @@ class MetadataReader(object):
 
     def __init__(self, metadata_server):
         self.metadata_server = metadata_server
+        self.session = Session()
+        self.session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         
     def get_region(self):
         """ Get the region value from the metadata service, if the last character of region is A it is automatically trimmed """
@@ -57,9 +59,7 @@ class MetadataReader(object):
                    'http://169.254.169.254/latest/meta-data/placement/availability-zone/' 
                    then the request part is 'latest/meta-data/placement/availability-zone/'.
         """
-        session = Session()
-        session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
-        result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
+        result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
         if result.status_code is codes.ok:
             return str(result.text)
         else:

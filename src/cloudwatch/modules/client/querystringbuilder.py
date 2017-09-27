@@ -22,6 +22,10 @@ class QuerystringBuilder(object):
     _STAT_MIN = _STATISTICS_KEY + "Minimum"
     _STAT_SUM = _STATISTICS_KEY + "Sum"
     _STAT_SAMPLE = _STATISTICS_KEY + "SampleCount"
+    _STORAGE_RESOLUTION = "StorageResolution"
+
+    def __init__(self, enable_high_resolution_metrics=False):
+        self.enable_high_resolution_metrics = enable_high_resolution_metrics
    
     def build_querystring(self, metric_list, request_map):
         """
@@ -29,11 +33,18 @@ class QuerystringBuilder(object):
         with all keys sorted in ascending order as required by CloudWatch.
         """
         metric_map = self._build_metric_map(metric_list)
-        request_map.update(metric_map)
-        sorted_query_data = sorted(request_map.items(),key=operator.itemgetter(0))
+        return self.build_querystring_from_map(metric_map, request_map)
+
+    def build_querystring_from_map(self, call_map, base_map):
+        """
+        Creates a query string from maps. Merges the "call map" with a base map, and creates the query string.
+        """
+        base_map.update(call_map)
+        sorted_query_data = sorted(base_map.items(),key=operator.itemgetter(0))
         # by default urlencode replace spaces with '+' but CloudWatch requires them to be encoded to '%20'
         url_string = urlencode(sorted_query_data).replace('+', '%20') 
         return url_string
+
 
     def _build_metric_map(self, metric_list):
         """ 
@@ -46,6 +57,8 @@ class QuerystringBuilder(object):
             metric_prefix = self._METRIC_PREFIX + str(metric_index) + "."
             metric_map[metric_prefix + self._METRIC_NAME_KEY] = metric.metric_name
             metric_map[metric_prefix + self._TIMESTAMP_KEY] = metric.timestamp
+            if self.enable_high_resolution_metrics:
+                metric_map[metric_prefix + self._STORAGE_RESOLUTION] = "1"
             self._add_dimensions(metric, metric_map, metric_prefix)
             self._add_values(metric, metric_map, metric_prefix)
             self._add_unit(metric, metric_map, metric_prefix)

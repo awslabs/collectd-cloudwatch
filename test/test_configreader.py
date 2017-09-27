@@ -25,6 +25,7 @@ class ConfigReaderTest(unittest.TestCase):
     VALID_SECRET_KEY_STRING = "valid_secret_key"
     VALID_REGION_STRING = "valid_region"
     VALID_HOST_STRING = "valid_host"
+    VALID_PUSH_ASG_AND_CONSTANT = CONFIG_DIR + "valid_config_push_constant_and_asg"
     VALID_PROXY_SERVER_NAME = "server_name"
     VALID_PROXY_SERVER_PORT = "server_port"
     
@@ -37,6 +38,23 @@ class ConfigReaderTest(unittest.TestCase):
     def test_get_credentials_path_from_config(self):
         self.config_reader = ConfigReader(self.VALID_CONFIG_FULL)
         self.assertEquals("./test/config_files/valid_credentials_file", self.config_reader.credentials_path)
+
+    def test_push_asg_false(self):
+        self.config_reader = ConfigReader(self.VALID_CONFIG_FULL)
+        self.assertFalse(self.config_reader.push_asg)
+
+    def test_push_constant_false(self):
+        self.config_reader = ConfigReader(self.VALID_CONFIG_FULL)
+        self.assertFalse(self.config_reader.push_constant)
+
+    def test_push_constant_true(self):
+        self.config_reader = ConfigReader(self.VALID_PUSH_ASG_AND_CONSTANT)
+        self.assertTrue(self.config_reader.push_constant)
+        self.assertEquals("potato", self.config_reader.constant_dimension_value)
+    
+    def test_push_asg_true(self):
+        self.config_reader = ConfigReader(self.VALID_PUSH_ASG_AND_CONSTANT)
+        self.assertTrue(self.config_reader.push_asg)
         
     def test_get_full_configuration(self):
         self.config_reader = ConfigReader(self.VALID_CONFIG_FULL)

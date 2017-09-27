@@ -3,12 +3,16 @@
 The [CloudWatch](http://aws.amazon.com/cloudwatch/) collectd plugin is a publishing extension for [collectd](https://collectd.org/), an open source statistic gathering daemon. With our extension all configured collectd metrics are automatically published to CloudWatch. This plugin allows monitoring of servers and applications within and outside of EC2 instances.
 The plugin offers additional functionality for EC2 customers such as automatic discovery of Instance ID and AWS region.
 
+## Attention: collectd python plugin is required for some collectd distribution.
+*  For example: for redhat distribution, run "yum install -y collectd-python".
+
 ## Installation
  * Download [installation script](https://github.com/awslabs/collectd-cloudwatch/blob/master/src/setup.py), place it on the instance and execute it:
 ```
 chmod u+x setup.py
 sudo ./setup.py
 ```
+
  * Follow on screen instructions
 
 ## Configuration
@@ -20,8 +24,13 @@ The default location of the configuration file used by collectd-cloudwatch plugi
  * __host__ - Manual override for EC2 Instance ID and Host information propagated by collectd
  * __proxy_server_name__ - Manual override for proxy server name, used by plugin to connect aws cloudwatch at *.amazonaws.com.
  * __proxy_server_port__ - Manual override for proxy server port, used by plugin to connect aws cloudwatch at *.amazonaws.com.
+ * __enable_high_resolution_metrics__ - The storage resolution is for high resolution support
+ * __flush_interval_in_seconds__ - The flush_interval_in_seconds is used for flush interval, it means how long plugin should flush the metrics to Cloudwatch
  * __whitelist_pass_through__ - Used to enable potentially unsafe regular expressions. By default regex such as a line containing `.*` or `.+` only is automatically disabled in the whitelist configuration.
   Setting this value to True may result in a large number of metrics being published. Before changing this parameter, read [pricing information](https://aws.amazon.com/cloudwatch/pricing/) to understand how to estimate your bill.
+ * __push_asg__ - Used to include the Auto-Scaling Group as a dimension for all metrics (see `Adding additional dimensions to metrics` below for details)
+ * __push_constant__ - Used to include a Fixed dimension (see `constant_dimension_value` below) on all metrics. Useful for collating all metrics of a certain type (see `Adding additional dimensions to metrics` below for details)
+ * __constant_dimension_value__ - Used to specify the value for the Fixed dimension (see `Adding additional dimensions to metrics` below for details)
  * __debug__ - Provides verbose logging of metrics emitted to CloudWatch
 
 #### Example configuration file
@@ -29,11 +38,37 @@ The default location of the configuration file used by collectd-cloudwatch plugi
 credentials_path = "/home/user/.aws/credentials"
 region = "us-west-1"
 host = "Server1"
-whitelist_pass_through = False
-debug = False
 proxy_server_name = "http://myproxyserver.com"
 proxy_server_port = "8080"
+whitelist_pass_through = False
+push_asg = False
+push_constant = True
+constant_dimension_value = "ALL"
+debug = False
+enable_high_resolution_metrics = False
+flush_interval_in_seconds = 60
 ```
+
+
+##### Adding additional dimensions to metrics
+We support adding both the ASG name to dimensions, as well as a "fixed dimension". Fixed dimensions are an additional value that will be added all metrics.
+
+###### Example configuration file
+    push_constant = True
+    constant_dimension_value = "MyConstantValueHere"
+
+The above configuraton will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
+
+###### Example configuration file
+    push_constant = True
+    constant_dimension_value = "MyConstantValueHere"
+
+The above configuraton will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
+
+###### Example configuration file
+    push_asg = False
+
+The above configuration will push the AutoScaling Group name for metrics as well
 
 ### AWS account configuration
 The account configuration is optional for EC2 instances with IAM Role attached. By default the AWS account configuration file is expected to be stored in: `/opt/collectd-plugins/cloudwatch/config/.aws/credentials`.
