@@ -61,6 +61,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 DISTRIBUTION_TO_INSTALLER = {
+    "Debian GNU": APT_INSTALL_COMMAND,
     "Ubuntu": APT_INSTALL_COMMAND,
     "Red Hat Enterprise Linux Server": YUM_INSTALL_COMMAND,
     "Amazon Linux AMI": YUM_INSTALL_COMMAND,
