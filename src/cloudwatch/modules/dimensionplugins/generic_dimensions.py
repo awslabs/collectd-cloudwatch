@@ -31,9 +31,10 @@ def dimension_get_plugin_instance(dimension, args):
 class Dimension_PluginInstance(DimensionPlugin):
     def register_plugin(self):
         self.func = dimension_get_plugin_instance
+        plugin_instance = self.vl.plugin_instance if self.vl.plugin_instance else "NONE"
         self.args = {
             'name': "PluginInstance",
-            'value': self.vl.plugin_instance
+            'value': plugin_instance
         }
 
 
