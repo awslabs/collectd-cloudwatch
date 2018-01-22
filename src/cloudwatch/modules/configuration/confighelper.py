@@ -4,6 +4,7 @@ from configreader import ConfigReader
 from metadatareader import MetadataReader
 from credentialsreader import CredentialsReader
 from whitelist import Whitelist, WhitelistConfigReader
+from dimensionreader import DimensionConfigReader
 from ..client.ec2getclient import EC2GetClient
 import traceback
 from dimensionreader import DimensionConfigReader

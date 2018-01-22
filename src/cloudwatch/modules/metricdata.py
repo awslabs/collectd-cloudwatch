@@ -1,5 +1,7 @@
 import awsutils as awsutils
 import plugininfo
+from logger.logger import get_logger
+from dimensionhandler import Dimensions
 import datetime
 from logger.logger import get_logger
 from dimensionhandler import Dimensions
