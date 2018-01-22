@@ -61,7 +61,6 @@ class QuerystringBuilder(object):
                 metric_map[metric_prefix + self._STORAGE_RESOLUTION] = "1"
             self._add_dimensions(metric, metric_map, metric_prefix)
             self._add_values(metric, metric_map, metric_prefix)
-            self._add_unit(metric, metric_map, metric_prefix)
             metric_index += 1
         return metric_map
     
