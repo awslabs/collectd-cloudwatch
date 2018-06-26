@@ -57,13 +57,13 @@ We support adding both the ASG name to dimensions, as well as a "fixed dimension
     push_constant = True
     constant_dimension_value = "MyConstantValueHere"
 
-The above configuraton will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
+The above configuration will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
 
 ###### Example configuration file
     push_constant = True
     constant_dimension_value = "MyConstantValueHere"
 
-The above configuraton will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
+The above configuration will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
 
 ###### Example configuration file
     push_asg = False
