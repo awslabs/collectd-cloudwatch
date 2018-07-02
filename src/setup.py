@@ -63,7 +63,7 @@ logger.setLevel(logging.DEBUG)
 DISTRIBUTION_TO_INSTALLER = {
     "Ubuntu": APT_INSTALL_COMMAND,
     "Red Hat Enterprise Linux Server": YUM_INSTALL_COMMAND,
-    "Amazon Linux AMI": YUM_INSTALL_COMMAND,
+    "Amazon Linux": YUM_INSTALL_COMMAND,
     "CentOS Linux": YUM_INSTALL_COMMAND,
 }
 
