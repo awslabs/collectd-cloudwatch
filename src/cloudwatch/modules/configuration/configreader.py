@@ -14,6 +14,7 @@ class ConfigReader(object):
     credentials_path -- the path to the file with AWS access and secret keys
     region -- the region in which host operates
     host -- the host name or instance name injected to each metric as dimension
+    pass_vl_host -- use host in value_list in dimension
     debug -- the mode in which plugin performs verbose logging of its operations
     pass_through -- the mode in which whitelist allows use of .* on its own
     
@@ -24,11 +25,13 @@ class ConfigReader(object):
     _LOGGER = get_logger(__name__)
     _DEBUG_DEFAULT_VALUE = False
     _ENABLE_HIGH_DEFINITION_METRICS_DEFAULT_VALUE = False
+    _PASS_VL_HOST_DEFAULT_VALUE = False
     _PASS_THROUGH_DEFAULT_VALUE = False
     _PUSH_ASG_DEFAULT_VALUE = False
     _PUSH_CONSTANT_DEFAULT_VALUE = False
     REGION_CONFIG_KEY = "region"
     HOST_CONFIG_KEY = "host"
+    PASS_VL_HOST_CONFIG_KEY = "pass_vl_host"
     CREDENTIALS_PATH_KEY = "credentials_path"
     DEBUG_CONFIG_KEY = "debug"
     PASS_THROUGH_CONFIG_KEY = "whitelist_pass_through"
@@ -45,6 +48,7 @@ class ConfigReader(object):
         self.credentials_path = ""
         self.region = ''
         self.host = ''
+        self.pass_vl_host = self._PASS_VL_HOST_DEFAULT_VALUE
         self.pass_through = self._PASS_THROUGH_DEFAULT_VALUE
         self.debug = self._DEBUG_DEFAULT_VALUE
         self.push_asg = self._PUSH_ASG_DEFAULT_VALUE
@@ -68,6 +72,7 @@ class ConfigReader(object):
         """
         self.credentials_path = self.reader_utils.get_string(self.CREDENTIALS_PATH_KEY)
         self.host = self.reader_utils.get_string(self.HOST_CONFIG_KEY)
+        self.pass_vl_host = self.reader_utils.try_get_boolean(self.PASS_VL_HOST_CONFIG_KEY, self._PASS_VL_HOST_DEFAULT_VALUE)
         self.region = self.reader_utils.get_string(self.REGION_CONFIG_KEY)
         self.proxy_server_name = self.reader_utils.get_string(self.PROXY_SERVER_NAME_KEY)
         self.proxy_server_port = self.reader_utils.get_string(self.PROXY_SERVER_PORT_KEY)

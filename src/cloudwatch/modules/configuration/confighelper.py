@@ -39,6 +39,7 @@ class ConfigHelper(object):
         self.endpoint = ''
         self.ec2_endpoint = ''
         self.host = ''
+        self.pass_vl_host = False
         self.asg_name = 'NONE'
         self.proxy_server_name = ''
         self.proxy_server_port = ''
@@ -89,6 +90,7 @@ class ConfigHelper(object):
         self.push_asg = self.config_reader.push_asg
         self.push_constant = self.config_reader.push_constant
         self.constant_dimension_value = self.config_reader.constant_dimension_value
+        self.pass_vl_host = self.config_reader.pass_vl_host
         self._check_configuration_integrity()
     
     def _get_credentials_path(self):
