@@ -27,6 +27,7 @@ class Flusher(object):
         self.client = None
         self.config = config_helper
         self.metric_map = {}
+        self.last_value = {}
         self.last_flush_time = time.time()
         self.nan_key_set = set()
         self.enable_high_resolution_metrics = config_helper.enable_high_resolution_metrics
@@ -56,12 +57,24 @@ class Flusher(object):
 
         return ds_names
 
+    def _resolve_ds_types(self, value_list):
+        ds_types = self._dataset_resolver.get_dataset_types(value_list.type)
+        if not ds_types:
+            return ['gauge' for i in range(len(value_list.values))]
+
+        return ds_types
+
     def _expand_value_list(self, value_list):
         if len(value_list.values) == 1:
+            ds_type = self._resolve_ds_types(value_list)
+            if value_list.meta:
+                value_list.meta['ds_type'] = ds_type[0]
+            else:
+                value_list.meta = {'ds_type': ds_type[0]}
             return [value_list]
 
         expanded = []
-        for ds_name, value in zip(self._resolve_ds_names(value_list), value_list.values):
+        for ds_name, ds_type, value in zip(self._resolve_ds_names(value_list), self._resolve_ds_types(value_list), value_list.values):
             new_value = value_list.__class__(
                 host=value_list.host,
                 plugin=value_list.plugin,
@@ -73,6 +86,10 @@ class Flusher(object):
                 meta=value_list.meta,
                 values=[value]
             )
+            if new_value.meta:
+                new_value.meta['ds_type'] = ds_type
+            else:
+                new_value.meta = {'ds_type': ds_type}
             expanded.append(new_value)
 
         return expanded
@@ -101,7 +118,8 @@ class Flusher(object):
             if self.config.debug and self.metric_map:
                 state = ""
                 for dimension_metrics in self.metric_map:
-                    state += str(dimension_metrics) + "[" + str(self.metric_map[dimension_metrics][0].statistics.sample_count) + "] "
+                    if self.metric_map[dimension_metrics][0].statistics:
+                        state += str(dimension_metrics) + "[" + str(self.metric_map[dimension_metrics][0].statistics.sample_count) + "] "
                 self._LOGGER.info("[debug] flushing metrics " + state)
             self._flush()
     
@@ -128,6 +146,10 @@ class Flusher(object):
         key = dimension_key
         if self.enable_high_resolution_metrics:
             key = dimension_key + "-" + str(adjusted_time)
+        if self.config.pass_vl_host:
+            key = value_list.host + '/' + key
+        if self.config.debug:
+            self._LOGGER.info("[debug] _aggregate_metric {} {}".format(key, value_list))
         if key in self.metric_map:
             nan_value_count = self._add_values_to_metrics(self.metric_map[key], value_list)
         else:
@@ -138,7 +160,8 @@ class Flusher(object):
                     if self.config.debug and self.metric_map:
                         state = ""
                         for dimension_metrics in self.metric_map:
-                            state += str(dimension_metrics) + "[" + str(self.metric_map[dimension_metrics][0].statistics.sample_count) + "] "
+                            if self.metric_map[dimension_metrics][0].statistics:
+                                state += str(dimension_metrics) + "[" + str(self.metric_map[dimension_metrics][0].statistics.sample_count) + "] "
                         self._LOGGER.info("[debug] flushing metrics " + state)
                     self._flush()
                     nan_value_count = self._add_metric_to_queue(value_list, adjusted_time, key)
@@ -150,6 +173,10 @@ class Flusher(object):
     def _add_metric_to_queue(self, value_list, adjusted_time, key):
         nan_value_count = 0
         metrics = MetricDataBuilder(self.config, value_list, adjusted_time).build()
+        if key in self.last_value:
+            for metric in metrics:
+                if metric.metric_name in self.last_value[key]:
+                    metric.cumulative(last_update=self.last_value[key][metric.metric_name]['last_update'], last_value=self.last_value[key][metric.metric_name]['last_value'])
         nan_value_count = self._add_values_to_metrics(metrics, value_list)
         if nan_value_count != len(value_list.values):
             self.metric_map[key] = metrics
@@ -174,7 +201,7 @@ class Flusher(object):
             nan_value_count = 0
             for value in value_list.values:
                 if self.is_numerical_value(value):
-                    metric.add_value(value)
+                    metric.add_value(value, value_list.time)
                 else:
                     nan_value_count += 1
         return nan_value_count
@@ -192,6 +219,9 @@ class Flusher(object):
                     metric_batch = prepare_batch.next()
                     if not metric_batch:
                         break
+                    if self.config.debug:
+                        for metric in metric_batch:
+                            self._LOGGER.info("[debug] put_metric_data " + str(metric.dimensions) + " " + metric.metric_name + " " + str(metric.timestamp) + " min {} max {} sum {} count {}".format(metric.statistics.min, metric.statistics.max, metric.statistics.sum, metric.statistics.sample_count))
                     self.client.put_metric_data(MetricDataStatistic.NAMESPACE, metric_batch)
                     if len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST:
                         break
@@ -207,7 +237,15 @@ class Flusher(object):
         metric_batch = []
         while self.metric_map:
             key, dimension_metrics = self.metric_map.popitem()
+            if key not in self.last_value:
+                self.last_value[key] = {}
             for metric in dimension_metrics:
+                self.last_value[key][metric.metric_name] = {
+                    'last_update': metric.last_update,
+                    'last_value': metric.last_value
+                    }
+                if metric.statistics is None:
+                    continue
                 if len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST:
                     metric_batch.append(metric)
                 else:
