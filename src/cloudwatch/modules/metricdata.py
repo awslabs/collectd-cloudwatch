@@ -177,8 +177,6 @@ class MetricDataBuilder(object):
         return "NONE"
 
     def _get_host_dimension(self):
-        if self.config.pass_vl_host:
-            return self.vl.host
         if self.config.host:
             return self.config.host
         return self.vl.host

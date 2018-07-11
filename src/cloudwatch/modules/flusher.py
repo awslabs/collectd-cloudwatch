@@ -146,10 +146,6 @@ class Flusher(object):
         key = dimension_key
         if self.enable_high_resolution_metrics:
             key = dimension_key + "-" + str(adjusted_time)
-        if self.config.pass_vl_host:
-            key = value_list.host + '/' + key
-        if self.config.debug:
-            self._LOGGER.info("[debug] _aggregate_metric {} {}".format(key, value_list))
         if key in self.metric_map:
             nan_value_count = self._add_values_to_metrics(self.metric_map[key], value_list)
         else:
