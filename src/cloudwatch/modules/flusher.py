@@ -215,9 +215,6 @@ class Flusher(object):
                     metric_batch = prepare_batch.next()
                     if not metric_batch:
                         break
-                    if self.config.debug:
-                        for metric in metric_batch:
-                            self._LOGGER.info("[debug] put_metric_data " + str(metric.dimensions) + " " + metric.metric_name + " " + str(metric.timestamp) + " min {} max {} sum {} count {}".format(metric.statistics.min, metric.statistics.max, metric.statistics.sum, metric.statistics.sample_count))
                     self.client.put_metric_data(MetricDataStatistic.NAMESPACE, metric_batch)
                     if len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST:
                         break
