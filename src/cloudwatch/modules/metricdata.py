@@ -5,7 +5,7 @@ import datetime
 class MetricDataStatistic(object):
     """
     The MetricDataStatistic object encapsulates the information sent with putMetricData.
-    
+
     Keyword arguments:
     namespace -- the default name space for CloudWatch metric (default defined by NAMESPACE)
     metric_name -- the metric identifier (default '')
@@ -14,7 +14,7 @@ class MetricDataStatistic(object):
     statistics -- the MetricDataStatistic.Statistics object used to aggregate raw values (default None)
     """
     NAMESPACE = plugininfo.NAMESPACE
-    
+
     def __init__(self, metric_name='', unit="", dimensions={}, statistic_values=None,
                  timestamp=None, namespace=NAMESPACE):
         """ Constructor """
@@ -26,18 +26,18 @@ class MetricDataStatistic(object):
         if timestamp:
             self.timestamp = timestamp
         else:
-            self.timestamp = awsutils.get_aws_timestamp() 
-        
+            self.timestamp = awsutils.get_aws_timestamp()
+
     def add_value(self, value):
         if not self.statistics:
-            self.statistics = self.Statistics(value) 
+            self.statistics = self.Statistics(value)
         else:
             self.statistics._add_value(value)
-        
+
     class Statistics:
         """
         The Statistics object encapsulates the aggregated metric values used by MetricDataStatistic.
-        
+
         Keyword arguments:
         min -- the minimum aggregated value (default None)
         max -- the maximum aggregated value (default None)
@@ -45,18 +45,18 @@ class MetricDataStatistic(object):
         avg -- the average of all aggregated values (default None)
         sample_count -- the count of aggregated values (default 0)
         """
-        
+
         def __init__(self, value):
             """ Constructor """
             self.min = value
             self.max = value
             self.sum = value
             self.sample_count = 1
-        
+
         def _add_value(self, value):
-            """ 
+            """
             Add new value and recalculate the statistics
-            
+
             Keyword arguments:
             value -- new value to be included in the statistics
             """
@@ -72,13 +72,13 @@ class MetricDataBuilder(object):
     """
     The metric data builder is responsible for translating Collectd value list objects
     to CloudWatch MetricData.
-    
+
     Keyword arguments:
     config_helper -- The ConfigHelper object with configuration loaded
     vl -- The Collectd ValueList object with metric information
     adjusted_time - The adjusted_time is the time adjusted according to storage resolution
     """
-    
+
     def __init__(self, config_helper, vl, adjusted_time=None):
         self.config = config_helper
         self.vl = vl
@@ -92,11 +92,11 @@ class MetricDataBuilder(object):
         if self.config.push_constant:
             metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
         return metric_array
-        
+
     def _build_timestamp(self):
         return datetime.datetime.utcfromtimestamp(self.adjusted_time).strftime('%Y%m%dT%H%M%SZ') if self.config.enable_high_resolution_metrics else None
 
-    def _build_metric_name(self): 
+    def _build_metric_name(self):
         """
         Creates single string metric name from the Collectd ValueList naming format by flattening the
         multilevel structure into the string in the following format: "plugin.type.type_instance".
@@ -107,7 +107,7 @@ class MetricDataBuilder(object):
         if self.vl.type_instance:
             name_builder.append(str(self.vl.type_instance))
         return ".".join(name_builder)
-    
+
     def _build_asg_dimension(self):
         dimensions = {
               "AutoScalingGroup" : self._get_autoscaling_group(),
@@ -124,7 +124,7 @@ class MetricDataBuilder(object):
 
     def _build_metric_dimensions(self):
         dimensions = {
-              "Host" : self._get_host_dimension(),
+              "InstanceId" : self._get_host_dimension(),
               "PluginInstance" : self._get_plugin_instance_dimension()
               }
         if self.config.push_asg:

@@ -31,7 +31,7 @@ from tempfile import gettempdir
 ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H_%M"
-GITHUB_USER_NAME = "awslabs"
+GITHUB_USER_NAME = "torrencj"
 GITHUB_REPO_BRANCH = "master"
 TAR_FILE = GITHUB_USER_NAME + "-collectd-cloudwatch.tar.gz"
 DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
@@ -381,7 +381,7 @@ class InteractiveConfigurator(object):
         choice = Prompt("\nInclude the Auto-Scaling Group name as a metric dimension:", options=["No", "Yes"], default="1").run()
         if choice == "2":
             self.config.push_asg = True
-            
+
     def _get_constant_dimension_value(self):
         return Prompt(message="Enter FixedDimension value [" + Color.green("ALL") + "]: ", default="ALL").run()
 
