@@ -39,6 +39,8 @@ class ConfigReader(object):
     PROXY_SERVER_PORT_KEY = "proxy_server_port"
     ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
     FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
+    EC2_ENDPOINT_URL = "ec2_endpoint_url"
+    MONITORING_ENDPOINT_URL = "monitoring_endpoint_url"
 
     def __init__(self, config_path):
         self.config_path = config_path
@@ -78,3 +80,5 @@ class ConfigReader(object):
         self.push_asg = self.reader_utils.try_get_boolean(self.PUSH_ASG_KEY, self._PUSH_ASG_DEFAULT_VALUE)
         self.push_constant = self.reader_utils.try_get_boolean(self.PUSH_CONSTANT_KEY, self._PUSH_CONSTANT_DEFAULT_VALUE)
         self.constant_dimension_value = self.reader_utils.get_string(self.CONSTANT_DIMENSION_KEY)
+        self.ec2_endpoint_url = self.reader_utils.get_string(self.EC2_ENDPOINT_URL)
+        self.monitoring_endpoint_url = self.reader_utils.get_string(self.MONITORING_ENDPOINT_URL)
