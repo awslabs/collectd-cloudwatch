@@ -13,8 +13,8 @@ class EC2RequestBuilder(BaseRequestBuilder):
     _ACTION = "DescribeTags"
     _API_VERSION = "2016-11-15"
     
-    def __init__(self, credentials, region):
-        super(self.__class__, self).__init__(credentials, region, self._SERVICE, self._ACTION, self._API_VERSION)
+    def __init__(self, ec2_endpoint, credentials, region):
+        super(self.__class__, self).__init__(ec2_endpoint, credentials, region, self._SERVICE, self._ACTION, self._API_VERSION)
     
     def create_signed_request(self, request_map):
         """ Creates a ready to send request with metrics from the metric list passed as parameter """
@@ -32,11 +32,3 @@ class EC2RequestBuilder(BaseRequestBuilder):
         http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html 
         """
         return self.querystring_builder.build_querystring_from_map(request_map, self._get_request_map())
-    
-    def _get_host(self):
-        """ Returns the endpoint's hostname derived from the region """
-        if self.region == "localhost":
-            return "localhost"
-        elif self.region.startswith("cn-"):
-            return "ec2." + self.region + ".amazonaws.com.cn"
-        return "ec2." + self.region + ".amazonaws.com"

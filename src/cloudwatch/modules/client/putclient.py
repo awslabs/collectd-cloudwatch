@@ -29,7 +29,7 @@ class PutClient(object):
     _LOG_FILE_MAX_SIZE = 10*1024*1024
 
     def __init__(self, config_helper, connection_timeout=_DEFAULT_CONNECTION_TIMEOUT, response_timeout=_DEFAULT_RESPONSE_TIMEOUT):
-        self.request_builder = RequestBuilder(config_helper.credentials, config_helper.region, config_helper.enable_high_resolution_metrics)
+        self.request_builder = RequestBuilder(config_helper.endpoint, config_helper.credentials, config_helper.region, config_helper.enable_high_resolution_metrics)
         self._validate_and_set_endpoint(config_helper.endpoint)
         self.timeout = (connection_timeout, response_timeout)
         self.proxy_server_name = config_helper.proxy_server_name
