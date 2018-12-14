@@ -3,6 +3,7 @@ from ..logger.logger import get_logger
 from configreader import ConfigReader
 from metadatareader import MetadataReader
 from credentialsreader import CredentialsReader
+from dimensionsreader import DimensionsReader
 from whitelist import Whitelist, WhitelistConfigReader
 from ..client.ec2getclient import EC2GetClient
 import traceback
@@ -27,6 +28,7 @@ class ConfigHelper(object):
     _DEFAULT_AGENT_ROOT_FOLDER = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, './config/') # '/opt/AmazonCloudWatchAgent/'
     _DEFAULT_CONFIG_PATH = _DEFAULT_AGENT_ROOT_FOLDER + 'plugin.conf'
     _DEFAULT_CREDENTIALS_PATH = _DEFAULT_AGENT_ROOT_FOLDER + ".aws/credentials"
+    _DEFAULT_DIMENSIONS_PATH = _DEFAULT_AGENT_ROOT_FOLDER + 'dimensions'
     _METADATA_SERVICE_ADDRESS = 'http://169.254.169.254/' 
     WHITELIST_CONFIG_PATH = _DEFAULT_AGENT_ROOT_FOLDER + 'whitelist.conf'
     BLOCKED_METRIC_PATH = _DEFAULT_AGENT_ROOT_FOLDER + 'blocked_metrics'
@@ -45,6 +47,7 @@ class ConfigHelper(object):
         self.debug = False
         self.pass_through = False
         self.push_asg = False
+        self.dimensions = []
         self.push_constant = False
         self.constant_dimension_value = ''
         self.enable_high_resolution_metrics = False
@@ -74,7 +77,9 @@ class ConfigHelper(object):
         self.config_reader = ConfigReader(self._config_path)
         self.credentials_reader = CredentialsReader(self._get_credentials_path())
         self.metadata_reader = MetadataReader(self._metadata_server)
+        self.dimensions_reader = DimensionsReader(self._get_dimensions_path())
         self._load_credentials()
+        self._load_dimensions()
         self._load_region()
         self._load_hostname()
         self._load_proxy_server_name()
@@ -110,6 +115,23 @@ class ConfigHelper(object):
     def _get_credentials_from_iam_role(self):
         """ Queries IAM Role metadata for latest credentials """
         return self.metadata_reader.get_iam_role_credentials(self.metadata_reader.get_iam_role_name())
+
+    def _get_dimensions_path(self):
+        dimensions_path = self.config_reader.dimensions_path
+        self._LOGGER.info("Dimensions Path: " + str(dimensions_path))
+        if not self.config_reader.dimensions_path:
+            dimensions_path = self._DEFAULT_DIMENSIONS_PATH
+        return dimensions_path
+
+    def _load_dimensions(self):
+        """
+        Tries to load dimensions based on the path to the file given in the plugin configuration file. If such file does not exist
+        or does not contain uncommented dimensions, then default dimensions are used.
+        """
+        self.dimensions = self.dimensions_reader.dimensions
+        if not self.dimensions:
+            self.dimensions = None
+            self._LOGGER.info("Dimensions set to None")
         
     def _load_region(self):
         """

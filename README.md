@@ -28,9 +28,10 @@ The default location of the configuration file used by collectd-cloudwatch plugi
  * __flush_interval_in_seconds__ - The flush_interval_in_seconds is used for flush interval, it means how long plugin should flush the metrics to Cloudwatch
  * __whitelist_pass_through__ - Used to enable potentially unsafe regular expressions. By default regex such as a line containing `.*` or `.+` only is automatically disabled in the whitelist configuration.
   Setting this value to True may result in a large number of metrics being published. Before changing this parameter, read [pricing information](https://aws.amazon.com/cloudwatch/pricing/) to understand how to estimate your bill.
- * __push_asg__ - Used to include the Auto-Scaling Group as a dimension for all metrics (see `Adding additional dimensions to metrics` below for details)
- * __push_constant__ - Used to include a Fixed dimension (see `constant_dimension_value` below) on all metrics. Useful for collating all metrics of a certain type (see `Adding additional dimensions to metrics` below for details)
- * __constant_dimension_value__ - Used to specify the value for the Fixed dimension (see `Adding additional dimensions to metrics` below for details)
+ * __dimensions_path__ - Path to file that contains custom dimension definition. (see `Adding EC2 metadata dimensions to metrics` below for details)
+ * __push_asg__ - Used to include the Auto-Scaling Group as a dimension for all metrics (see `Adding simple dimensions to metrics` below for details)
+ * __push_constant__ - Used to include a Fixed dimension (see `constant_dimension_value` below) on all metrics. Useful for collating all metrics of a certain type (see `Adding simple dimensions to metrics` below for details)
+ * __constant_dimension_value__ - Used to specify the value for the Fixed dimension (see `Adding simple dimensions to metrics` below for details)
  * __debug__ - Provides verbose logging of metrics emitted to CloudWatch
 
 #### Example configuration file
@@ -41,6 +42,7 @@ host = "Server1"
 proxy_server_name = "http://myproxyserver.com"
 proxy_server_port = "8080"
 whitelist_pass_through = False
+dimensions_path = "/opt/collectd-plugins/cloudwatch/config/dimensions"
 push_asg = False
 push_constant = True
 constant_dimension_value = "ALL"
@@ -50,7 +52,7 @@ flush_interval_in_seconds = 60
 ```
 
 
-##### Adding additional dimensions to metrics
+##### Adding simple dimensions to metrics
 We support adding both the ASG name to dimensions, as well as a "fixed dimension". Fixed dimensions are an additional value that will be added all metrics.
 
 ###### Example configuration file
@@ -69,6 +71,26 @@ The above configuration will result in all metrics being pushed with "FixedDimen
     push_asg = False
 
 The above configuration will push the AutoScaling Group name for metrics as well
+
+###### Adding EC2 metadata dimensions to metrics
+User can specify in a dimension file the instance metadata that he/she wants to be pushed to aws cloudwatch along with the metric information. For example, a user can specify region, availability-zone, private-ip, instanceid, and more in the dimension file. In effect those attributes will be pushed along with the metric data to aws cloudwatch giving more clarity and information to the user about the particular metric(s).
+
+Usage:
+Create dimensions file in whatever location you want.
+Recommended Path: /opt/collectd-plugins/cloudwatch/config/dimensions
+
+Sample Dimensions File:
+```
+Host
+PrivateIp
+InstanceId
+Region
+```
+After setup.py is ran there will be a dimensions file located at the dimensions_path file location. By default, dimensions will be Host and PluginInstance. Any key within the [instance dimension document](http://169.254.169.254/latest/dynamic/instance-identity/document) is supported however the first letter of the key will have to be captilized and there should be no spaces at the end of the key.
+
+For example, the key in the identity document the key `imageId` would become `ImageId` in the dimensions file.
+
+If you update a dimension in the dimensions file collectd will need to be restarted. Setup.py must be ran in interactive mode.
 
 ### AWS account configuration
 The account configuration is optional for EC2 instances with IAM Role attached. By default the AWS account configuration file is expected to be stored in: `/opt/collectd-plugins/cloudwatch/config/.aws/credentials`.

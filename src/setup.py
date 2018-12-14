@@ -31,11 +31,12 @@ from tempfile import gettempdir
 ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H_%M"
-GITHUB_USER_NAME = "awslabs"
+GITHUB_USER_NAME = "GESkunkworks"
 GITHUB_REPO_BRANCH = "master"
 TAR_FILE = GITHUB_USER_NAME + "-collectd-cloudwatch.tar.gz"
 DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
 DEFAULT_PLUGIN_CONFIGURATION_DIR = "/opt/collectd-plugins/cloudwatch/config"
+DEFAULT_DIMENSIONS_FILE = path.join(DEFAULT_PLUGIN_CONFIGURATION_DIR, "dimensions")
 NEW_PLUGIN_FILES = DOWNLOAD_PLUGIN_DIR + "/src/*"
 RECOMMENDED_COLLECTD_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd.conf"
 RECOMMENDED_WHITELIST = DOWNLOAD_PLUGIN_DIR + "/resources/whitelist.conf"
@@ -287,6 +288,7 @@ class PluginConfig(object):
     PROXY_SERVER_PORT = "proxy_server_port"
     PASS_THROUGH_KEY = "whitelist_pass_through"
     PUSH_ASG_KEY = "push_asg"
+    DIMENSIONS_PATH_KEY = "dimensions_path"
     PUSH_CONSTANT_KEY = "push_constant"
     CONSTANT_DIMENSION_VALUE_KEY = "constant_dimension_value"
     DEBUG_KEY = "debug"
@@ -295,7 +297,7 @@ class PluginConfig(object):
     ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
     FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
 
-    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, push_constant=None, constant_dimension_value=None, enable_high_resolution_metrics=False, flush_interval_in_seconds=None):
+    def __init__(self, credentials_path=None, access_key=None, secret_key=None, region=None, host=None, proxy_server_name=None, proxy_server_port=None, push_asg=None, dimensions_path=None, push_constant=None, constant_dimension_value=None, enable_high_resolution_metrics=False, flush_interval_in_seconds=None):
         self.credentials_path = credentials_path
         self.access_key = access_key
         self.secret_key = secret_key
@@ -306,11 +308,13 @@ class PluginConfig(object):
         self.debug = False
         self.pass_through = False
         self.credentials_file_exist = False
+        self.dimensions_file_exist = False
         self.proxy_server_name = proxy_server_name
         self.proxy_server_port = proxy_server_port
         self.enable_high_resolution_metrics = enable_high_resolution_metrics
         self.flush_interval_in_seconds = flush_interval_in_seconds
         self.push_asg = push_asg
+        self.dimensions_path = dimensions_path
         self.push_constant = push_constant
         self.constant_dimension_value = constant_dimension_value
 
@@ -322,7 +326,7 @@ class InteractiveConfigurator(object):
                  non_interactive, region, host, proxy_name, proxy_port,
                  enable_high_resolution_metrics, flush_interval_in_seconds,
                  access_key, secret_key, creds_path,
-                 installation_method, push_asg, push_constant, dimension_value,
+                 installation_method, push_asg, dimensions_path, push_constant, dimension_value,
                  debug_setup, debug):
         self.config = plugin_config
         self.metadata_reader = metadata_reader
@@ -339,6 +343,7 @@ class InteractiveConfigurator(object):
         self.creds_path = creds_path
         self.installation_method = installation_method
         self.push_asg = push_asg
+        self.dimensions_path = dimensions_path
         self.push_constant = push_constant
         self.dimension_value = dimension_value
         self.debug = debug
@@ -352,6 +357,7 @@ class InteractiveConfigurator(object):
             self._configure_proxy_server_name_non_interactive()
             self._configure_proxy_server_port_non_interactive()
             self._configure_push_asg_non_interactive()
+            self._configure_dimensions_path_non_interactive()
             self._configure_push_constant_non_interactive()
             self._configure_enable_high_resolution_metrics_non_interactive()
             self._configure_flush_interval_in_seconds_non_interactive()
@@ -366,10 +372,35 @@ class InteractiveConfigurator(object):
             self._configure_proxy_server_name()
             self._configure_proxy_server_port()
             self._configure_push_asg()
+            self._configure_dimensions_path()
             self._configure_push_constant()
             self._configure_enable_high_resolution_metrics()
             self._configure_flush_interval_in_seconds()
             self._configure_plugin_installation_method()
+
+    def _configure_dimensions_path_non_interactive(self):
+        try:
+            with open(DEFAULT_DIMENSIONS_FILE, "w") as dimensions_file:
+                dimensions_file.write("""#You can use all of the instance identity documents dimensions\n#Make sure that the first letter of the dimension is captilized and there are no spaces at the end of the dimension\n#For more information on dimensions that can be used:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html\n#Host\n#PluginInstance""")
+                print(Color.green("Dimensions File written successfully."))
+        except IOError as e:
+            raise InstallationFailedException("Could not write dimensions file. Cause: {}".format(str(e)))
+
+    def _get_dimensions_path(self):
+        recommended_path = DEFAULT_DIMENSIONS_FILE
+        dims_path = ""
+        while not path.isabs(dims_path):
+                dims_path = Prompt(
+                    message="\nEnter absolute path to Dimensions file [" + Color.green(recommended_path) + "]: ",
+                    default=recommended_path).run()
+        return dims_path
+
+    def _configure_dimensions_path(self):
+        self.config.dimensions_path = self._get_dimensions_path()
+        self.config.dimensions_file_exist = path.exists(self.config.dimensions_path)
+        if not self.config.dimensions_file_exist:
+            print(Color.red("Dimensions file path doesn't exist please renter the correct path: \n"))
+            self._configure_dimensions_path()
 
     def _configure_push_asg_non_interactive(self):
         if self.push_asg:
@@ -603,6 +634,7 @@ class InteractiveConfigurator(object):
         logger.info('FLUSH INTERVAL IN SECONDS: {}'.format(
             self.config.flush_interval_in_seconds))
         logger.info('CREDENTIALS PATH: {}'.format(self.config.credentials_path))
+        logger.info('DIMENSIONS FILE PATH: {}'.format(self.config.dimensions_path))
         logger.info('METHOD ONLY ADD PLUGIN: {}'.format(self.config.only_add_plugin))
         logger.info('USE RECOMMENDED CONFIG: {}'.format(self.config.use_recommended_collectd_config))
         logger.info('REGION: {}'.format(self.config.region))
@@ -666,6 +698,9 @@ $debug$
 # WARNING: ENABLING THIS WILL LEAD TO CREATING A LARGE NUMBER OF METRICS.
 $push_asg$
 
+# The path to the Dimensions file. This path has to be provided if you want extra metadata sent along with metric data to cloudwatch
+$dimensions_path$
+
 # Whether or not to push the constant value to CWM as a metric
 $push_constant$
 
@@ -724,6 +759,7 @@ $flush_interval_in_seconds$
         config = self._replace_with_value(config, self.plugin_config.ENABLE_HIGH_DEFINITION_METRICS, self.plugin_config.enable_high_resolution_metrics)
         config = self._replace_with_value(config, self.plugin_config.FLUSH_INTERVAL_IN_SECONDS, self.plugin_config.flush_interval_in_seconds)
         config = self._replace_with_value(config, self.plugin_config.PUSH_ASG_KEY, self.plugin_config.push_asg)
+        config = self._replace_with_value(config, self.plugin_config.DIMENSIONS_PATH_KEY, self.plugin_config.dimensions_path)
         config = self._replace_with_value(config, self.plugin_config.PUSH_CONSTANT_KEY, self.plugin_config.push_constant)
         config = self._replace_with_value(config, self.plugin_config.CONSTANT_DIMENSION_VALUE_KEY, self.plugin_config.constant_dimension_value)
         return config
@@ -816,6 +852,11 @@ def main():
         default=False, action='store_true'
     )
     parser.add_argument(
+        '-df', '--dimensions_path', required=False,
+        help='Absolute path to Dimensions file',
+        default=None
+    )
+    parser.add_argument(
         '-c', '--push_constant', required=False,
         help='Include the FixedDimension as a metric dimension',
         default=None, action='store_true'
@@ -860,6 +901,7 @@ def main():
     creds_path = args.creds_path
     installation_method = args.installation_method
     push_asg = args.push_asg
+    dimensions_path = args.dimensions_path
     push_constant = args.push_constant
     dimension_value = args.dimension_value
     debug_setup = args.debug_setup
@@ -908,8 +950,9 @@ def main():
                                 non_interactive, region, host, proxy_name,
                                 proxy_port, enable_high_resolution_metrics,
                                 flush_interval, access_key, secret_key,
-                                creds_path, installation_method, push_asg,
-                                push_constant, dimension_value, debug_setup,
+                                creds_path, installation_method, push_asg, 
+                                dimensions_path, push_constant, 
+                                dimension_value, debug_setup,
                                 debug).run()
         PluginConfigWriter(plugin_config).write()
 
