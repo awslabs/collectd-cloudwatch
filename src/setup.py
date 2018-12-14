@@ -31,7 +31,7 @@ from tempfile import gettempdir
 ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H_%M"
-GITHUB_USER_NAME = "GESkunkworks"
+GITHUB_USER_NAME = "awslabs"
 GITHUB_REPO_BRANCH = "master"
 TAR_FILE = GITHUB_USER_NAME + "-collectd-cloudwatch.tar.gz"
 DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
