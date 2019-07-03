@@ -54,7 +54,7 @@ class EC2GetClient(object):
             ns={'ec2': 'http://ec2.amazonaws.com/doc/2016-11-15/'}
             return xmldoc.findall('ec2:tagSet/ec2:item[0]/ec2:value',ns)[0].text
         except Exception as e:
-            self._LOGGER.warning("Could not get the autoscalig group name using the following endpoint: '" + self.endpoint +"'. [Exception: " + str(e) + "]")
+            self._LOGGER.warning("Could not get the autoscaling group name using the following endpoint: '" + self.endpoint +"'. [Exception: " + str(e) + "]")
             self._LOGGER.warning("Request details: '" + request + "'")
             return "NONE"
 
