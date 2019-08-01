@@ -34,13 +34,6 @@ TIMESTAMP_FORMAT = "%Y-%m-%d_%H_%M"
 GITHUB_USER_NAME = "awslabs"
 GITHUB_REPO_BRANCH = "master"
 TAR_FILE = GITHUB_USER_NAME + "-collectd-cloudwatch.tar.gz"
-DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
-DEFAULT_PLUGIN_CONFIGURATION_DIR = "/opt/collectd-plugins/cloudwatch/config"
-NEW_PLUGIN_FILES = DOWNLOAD_PLUGIN_DIR + "/src/*"
-RECOMMENDED_COLLECTD_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd.conf"
-RECOMMENDED_WHITELIST = DOWNLOAD_PLUGIN_DIR + "/resources/whitelist.conf"
-PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudwatch.conf"
-PLUGIN_CONFIGURATION_INCLUDE_LINE = 'Include "/etc/collectd-cloudwatch.conf"\r\n'
 APT_INSTALL_COMMAND = "apt-get install -y "
 YUM_INSTALL_COMMAND = "yum install -y "
 SYSTEM_DEPENDENCIES = ["python-pip", "python-setuptools"]
@@ -55,6 +48,7 @@ DISTRO_NAME_REGEX = re.compile("(?<!...)NAME=\"?([\w\s]*)\"?\s?")
 CLOUD_WATCH_COLLECTD_DETECTION_REGEX = re.compile('^Import [\'\"]cloudwatch_writer[\"\']$|collectd-cloudwatch\.conf', re.MULTILINE | re.IGNORECASE)
 COLLECTD_CONFIG_INCLUDE_REGEX = re.compile("^Include [\'\"](.*?\.conf)[\'\"]", re.MULTILINE | re.IGNORECASE)
 COLLECTD_PYTHON_PLUGIN_CONFIGURATION_REGEX = re.compile("^LoadPlugin python$|^<LoadPlugin python>$", re.MULTILINE | re.IGNORECASE)
+DEFAULT_PLUGIN_CONFIGURATION_DIR = "/opt/collectd-plugins/cloudwatch/config"
 
 logging.basicConfig()
 logger = logging.getLogger()
@@ -244,11 +238,12 @@ class MetadataRequestException(Exception):
     pass
 
 
-def install_python_packages(packages):
-    try:
-        Command(detect_pip() + PIP_INSTALLATION_FLAGS + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
-    except CalledProcessError:
-        Command(EASY_INSTALL_COMMAND + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
+def install_python_packages(packages, offline_install):
+    if offline_install is None:
+        try:
+            Command(detect_pip() + PIP_INSTALLATION_FLAGS + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
+        except CalledProcessError:
+            Command(EASY_INSTALL_COMMAND + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
 
 
 def detect_pip():
@@ -258,9 +253,10 @@ def detect_pip():
         return get_path_to_executable("python-pip")
 
 
-def install_packages(packages):
+def install_packages(packages, offline_install):
     command = DISTRIBUTION_TO_INSTALLER[detect_linux_distribution()] + " ".join(packages)
-    Command(command, "Installing dependencies").run()
+    if offline_install is None:
+        Command(command, "Installing dependencies").run()
 
 
 def detect_linux_distribution():
@@ -685,6 +681,7 @@ $enable_high_resolution_metrics$
 $flush_interval_in_seconds$
 
 """
+
     DEFAULT_PLUGIN_CONFIG_FILE = path.join(DEFAULT_PLUGIN_CONFIGURATION_DIR, "plugin.conf")
 
     def __init__(self, plugin_config):
@@ -740,15 +737,6 @@ def main():
     COLLECTD_INFO = get_collectd_info()
     STOP_COLLECTD_CMD = CMD("pkill collectd", "Stopping collectd process")
     START_COLLECTD_CMD = CMD(COLLECTD_INFO.exec_path, "Starting collectd process")
-    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/" + GITHUB_USER_NAME + "/collectd-cloudwatch/tarball/" + GITHUB_REPO_BRANCH + " > " + TAR_FILE, "Downloading plugin")
-    UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
-    COPY_CMD = "\cp -rf {source} {target}"
-    COPY_PLUGIN_CMD = CMD(COPY_CMD.format(source=NEW_PLUGIN_FILES, target=CollectdInfo.PLUGINS_DIR), "Moving to collectd plugins directory")
-    COPY_PLUGIN_INCLUDE_FILE_CMD = CMD(COPY_CMD.format(source=PLUGIN_INCLUDE_CONFIGURATION, target="/etc/"), "Copying CloudWatch plugin include file")
-    COPY_RECOMMENDED_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_COLLECTD_CONFIGURATION, target=COLLECTD_INFO.config_path), "Replacing collectd configuration")
-    BACKUP_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=COLLECTD_INFO.config_path, target=COLLECTD_INFO.config_path + "." + time.strftime(TIMESTAMP_FORMAT)),
-                                 "Creating backup of the original configuration")
-    REPLACE_WHITELIST_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_WHITELIST, target=DEFAULT_PLUGIN_CONFIGURATION_DIR), "Replacing whitelist configuration")
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -833,6 +821,12 @@ def main():
         '-D', '--debug_setup', default=False,
         action='store_true', help='Provides verbose logging during setup process'
     )
+    parser.add_argument(
+        '-oi', '--offline_install', required=False,
+        action='store', help='Provide path to plugin, this will skip dependency installation and anything that requires internet connection',
+        default=None
+    )
+    
     args = parser.parse_args()
 
     if args.proxy_port is None and args.proxy_name or args.proxy_port and args.proxy_name is None:
@@ -864,15 +858,37 @@ def main():
     dimension_value = args.dimension_value
     debug_setup = args.debug_setup
     debug = args.debug
+    offline_install = args.offline_install
+
+    if offline_install is None:
+        DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
+    else:
+        DOWNLOAD_PLUGIN_DIR = offline_install
+    NEW_PLUGIN_FILES = DOWNLOAD_PLUGIN_DIR + "/src/*"
+    RECOMMENDED_COLLECTD_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd.conf"
+    RECOMMENDED_WHITELIST = DOWNLOAD_PLUGIN_DIR + "/resources/whitelist.conf"
+    PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudwatch.conf"
+    PLUGIN_CONFIGURATION_INCLUDE_LINE = 'Include "/etc/collectd-cloudwatch.conf"\r\n'
+
+    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/" + GITHUB_USER_NAME + "/collectd-cloudwatch/tarball/" + GITHUB_REPO_BRANCH + " > " + TAR_FILE, "Downloading plugin")
+    UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
+    COPY_CMD = "\cp -rf {source} {target}"
+    COPY_PLUGIN_CMD = CMD(COPY_CMD.format(source=NEW_PLUGIN_FILES, target=CollectdInfo.PLUGINS_DIR), "Moving to collectd plugins directory")
+    COPY_PLUGIN_INCLUDE_FILE_CMD = CMD(COPY_CMD.format(source=PLUGIN_INCLUDE_CONFIGURATION, target="/etc/"), "Copying CloudWatch plugin include file")
+    COPY_RECOMMENDED_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_COLLECTD_CONFIGURATION, target=COLLECTD_INFO.config_path), "Replacing collectd configuration")
+    BACKUP_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=COLLECTD_INFO.config_path, target=COLLECTD_INFO.config_path + "." + time.strftime(TIMESTAMP_FORMAT)),
+                                "Creating backup of the original configuration")
+    REPLACE_WHITELIST_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_WHITELIST, target=DEFAULT_PLUGIN_CONFIGURATION_DIR), "Replacing whitelist configuration")
 
     def install_plugin():
         try:
-            install_packages(SYSTEM_DEPENDENCIES)
-            install_python_packages(PYTHON_DEPENDENCIES)
+            install_packages(SYSTEM_DEPENDENCIES, offline_install)
+            install_python_packages(PYTHON_DEPENDENCIES, offline_install)
             create_directory_structure()
             chdir(TEMP_DIRECTORY)
-            _run_command(DOWNLOAD_PLUGIN_CMD, shell=True, exit_on_failure=True)
-            _run_command(UNTAR_PLUGIN_CMD, exit_on_failure=True)
+            if offline_install is None:
+                _run_command(DOWNLOAD_PLUGIN_CMD, shell=True, exit_on_failure=True)
+                _run_command(UNTAR_PLUGIN_CMD, exit_on_failure=True)
             _run_command(COPY_PLUGIN_CMD, shell=True, exit_on_failure=True)
             supply_config()
             restart_collectd()
