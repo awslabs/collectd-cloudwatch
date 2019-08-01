@@ -14,6 +14,8 @@ sudo ./setup.py
 ```
 
  * Follow on screen instructions
+ 
+If you require offline installation, you can skip the depencency installation and provide local plugin src directory with --offline_install="/tmp/collectd_cloudwatch"
 
 ## Configuration
 
