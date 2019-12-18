@@ -1,11 +1,11 @@
 import unittest
 import requests
 from helpers.fake_http_server import FakeServer
+from helpers.fake_metadata import FAKE_REGION, FAKE_IDENTITY_DOCUMENT_STRING
 from cloudwatch.modules.configuration.metadatareader import MetadataReader, MetadataRequestException
 
 class MetadataReaderTest(unittest.TestCase):
     FAKE_SERVER = None
-    REAL_REGION_STRING = "eu-west-1a"
     MINIMUM_NUMBER_OF_RETRIES = 3
     MAXIMUM_NUMBER_OF_RETRIES = 5
     
@@ -17,7 +17,7 @@ class MetadataReaderTest(unittest.TestCase):
         
     def setUp(self):
         self.server = MetadataReaderTest.FAKE_SERVER
-        self.server.set_expected_response(MetadataReaderTest.REAL_REGION_STRING, 200)
+        self.server.set_expected_response(FAKE_IDENTITY_DOCUMENT_STRING, 200)
         self.metadata_reader = MetadataReader(self.server.get_url())
     
     def test_number_of_retries_is_within_expected_range(self):
@@ -26,10 +26,8 @@ class MetadataReaderTest(unittest.TestCase):
             self.fail("The total number of retries for metadata reader is invalid")
     
     def test_get_region_from_metadata(self):
-        self.server.set_expected_response(MetadataReaderTest.REAL_REGION_STRING, 200)
-        self.assertEquals(MetadataReaderTest.REAL_REGION_STRING[:-1], self.metadata_reader.get_region()) #trimmed last character 'a'
-        self.server.set_expected_response("us-east-2c", 200)
-        self.assertEquals("us-east-2", self.metadata_reader.get_region())
+        self.server.set_expected_response(FAKE_IDENTITY_DOCUMENT_STRING, 200)
+        self.assertEquals(FAKE_REGION, self.metadata_reader.get_region())
     
     def test_get_full_configuration_from_config_file(self):
         self.server.set_expected_response("invalid request", 404)

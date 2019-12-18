@@ -13,7 +13,7 @@ class MetadataReader(object):
     metadata_server -- the address of the local metadata server (Required)
     """
     _LOGGER = get_logger(__name__)
-    _REGION_METADATA_REQUEST = "latest/meta-data/placement/availability-zone/"
+    _IDENTITY_DOCUMENT_REQUEST = "latest/dynamic/instance-identity/document"
     _INSTANCE_ID_METADATA_REQUEST = "latest/meta-data/instance-id/"
     _IAM_ROLE_CREDENTIAL_REQUEST = "latest/meta-data/iam/security-credentials/"
     _TOTAL_RETRIES = 3
@@ -27,9 +27,9 @@ class MetadataReader(object):
         self.session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         
     def get_region(self):
-        """ Get the region value from the metadata service, if the last character of region is A it is automatically trimmed """
-        region = self._get_metadata(MetadataReader._REGION_METADATA_REQUEST)
-        return region[:-1]
+        """ Get the region value from the metadata service """
+        document = self._get_metadata(MetadataReader._IDENTITY_DOCUMENT_REQUEST)
+        return loads(document)['region']
 
     def get_instance_id(self):
         """ Get the instance id value from the metadata service """
