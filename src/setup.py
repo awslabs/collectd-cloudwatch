@@ -195,7 +195,7 @@ class MetadataReader(object):
     The metadata reader class is responsible for retrieving configuration values from the local metadata server.
     """
     _METADATA_SERVICE_ADDRESS = 'http://169.254.169.254/'
-    _REGION_METADATA_REQUEST = "latest/meta-data/placement/availability-zone/"
+    _IDENTITY_DOCUMENT_REQUEST = "latest/dynamic/instance-identity/document"
     _INSTANCE_ID_METADATA_REQUEST = "latest/meta-data/instance-id/"
     _IAM_ROLE_CREDENTIAL_REQUEST = "latest/meta-data/iam/security-credentials/"
     _MAX_RETRIES = 1
@@ -207,9 +207,9 @@ class MetadataReader(object):
         self.metadata_server = self._METADATA_SERVICE_ADDRESS
 
     def get_region(self):
-        """ Get the region value from the metadata service, if the last character of region is A it is automatically trimmed """
-        region = self._get_metadata(MetadataReader._REGION_METADATA_REQUEST)
-        return region[:-1]
+        """ Get the region value from the metadata service """
+        document = self._get_metadata(MetadataReader._IDENTITY_DOCUMENT_REQUEST)
+        return loads(document)['region']
 
     def get_instance_id(self):
         """ Get the instance id value from the metadata service """
@@ -382,7 +382,7 @@ class InteractiveConfigurator(object):
         choice = Prompt("\nInclude the Auto-Scaling Group name as a metric dimension:", options=["No", "Yes"], default="1").run()
         if choice == "2":
             self.config.push_asg = True
-            
+
     def _get_constant_dimension_value(self):
         return Prompt(message="Enter FixedDimension value [" + Color.green("ALL") + "]: ", default="ALL").run()
 
