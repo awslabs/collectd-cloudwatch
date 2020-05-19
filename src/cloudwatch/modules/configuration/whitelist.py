@@ -18,7 +18,7 @@ class WhitelistConfigReader(object):
     END_STRING = "$"
     EMPTY_REGEX = START_STRING + END_STRING
 
-    PASS_THROUGH_REGEX_STRING = "^\.[\*\+]?\s.*$|^.*?\s\.[\*\+]|^\.[\*\+]$"  # matches single .*, .+ strings
+    PASS_THROUGH_REGEX_STRING = r"^\.[\*\+]?\s.*$|^.*?\s\.[\*\+]|^\.[\*\+]$"  # matches single .*, .+ strings
     # as well as  strings with .* or .+ preceded or followed by whitespace.
 
     def __init__(self, whitelist_config_path, pass_through_allowed):

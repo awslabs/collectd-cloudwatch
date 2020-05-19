@@ -49,12 +49,12 @@ EASY_INSTALL_COMMAND = "easy_install -U --quiet "
 PYTHON_DEPENDENCIES = ["requests"]
 FIND_COMMAND = "which {} 2> /dev/null"
 COLLECTD_HELP_ARGS = "-help"
-CONFIG_FILE_REGEX = re.compile("\sConfig file\s*(.*)\s")
-VERSION_REGEX = re.compile("\scollectd ([\d*].*[\d*]).*\s")
-DISTRO_NAME_REGEX = re.compile("(?<!...)NAME=\"?([\w\s]*)\"?\s?")
-CLOUD_WATCH_COLLECTD_DETECTION_REGEX = re.compile('^Import [\'\"]cloudwatch_writer[\"\']$|collectd-cloudwatch\.conf', re.MULTILINE | re.IGNORECASE)
-COLLECTD_CONFIG_INCLUDE_REGEX = re.compile("^Include [\'\"](.*?\.conf)[\'\"]", re.MULTILINE | re.IGNORECASE)
-COLLECTD_PYTHON_PLUGIN_CONFIGURATION_REGEX = re.compile("^LoadPlugin python$|^<LoadPlugin python>$", re.MULTILINE | re.IGNORECASE)
+CONFIG_FILE_REGEX = re.compile(r"\sConfig file\s*(.*)\s")
+VERSION_REGEX = re.compile(r"\scollectd ([\d*].*[\d*]).*\s")
+DISTRO_NAME_REGEX = re.compile(r"(?<!...)NAME=\"?([\w\s]*)\"?\s?")
+CLOUD_WATCH_COLLECTD_DETECTION_REGEX = re.compile(r'^Import [\'\"]cloudwatch_writer[\"\']$|collectd-cloudwatch\.conf', re.MULTILINE | re.IGNORECASE)
+COLLECTD_CONFIG_INCLUDE_REGEX = re.compile(r"^Include [\'\"](.*?\.conf)[\'\"]", re.MULTILINE | re.IGNORECASE)
+COLLECTD_PYTHON_PLUGIN_CONFIGURATION_REGEX = re.compile(r"^LoadPlugin python$|^<LoadPlugin python>$", re.MULTILINE | re.IGNORECASE)
 
 logging.basicConfig()
 logger = logging.getLogger()

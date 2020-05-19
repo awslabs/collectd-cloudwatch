@@ -29,7 +29,7 @@ class EC2GetClient(object):
         self.timeout = (connection_timeout, response_timeout)
     
     def _validate_and_set_endpoint(self, endpoint):
-        pattern = re.compile("http[s]?://*/")
+        pattern = re.compile(r"http[s]?://*/")
         if pattern.match(endpoint) or "localhost" in endpoint: 
             self.endpoint = endpoint    
         else:
