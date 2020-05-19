@@ -1,6 +1,5 @@
 import re
 from os import path
-from string import strip
 from threading import Lock
 
 from configreader import ConfigReader
@@ -43,7 +42,7 @@ class WhitelistConfigReader(object):
 
     def _get_whitelisted_names_from_file(self, whitelist_path):
         with open(whitelist_path) as whitelist_file:
-            return self._filter_valid_regexes(map(strip, whitelist_file))
+            return self._filter_valid_regexes(map(str.strip, whitelist_file))
 
     def _create_whitelist_file(self, whitelist_path):
         if not path.exists(whitelist_path):
@@ -138,6 +137,3 @@ class Whitelist(object):
                 self._allowed_metrics[metric_key] = False
                 self.blocked_metric_log.log_metric(metric_key)
         return self._allowed_metrics[metric_key]
-
-
-

@@ -34,5 +34,6 @@ def aws_write(vl, flusher):
     Collectd callback entry used to write metric data
     """
     flusher.add_metric(vl)
-    
+
+
 collectd.register_init(aws_init)

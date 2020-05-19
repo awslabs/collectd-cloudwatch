@@ -195,7 +195,7 @@ class Flusher(object):
                     self.client.put_metric_data(MetricDataStatistic.NAMESPACE, metric_batch)
                     if len(metric_batch) < self._MAX_METRICS_PER_PUT_REQUEST:
                         break
-            except StopIteration, e:
+            except StopIteration as e:
                 if metric_map_size % self._MAX_METRICS_PER_PUT_REQUEST != 0 or len(self.metric_map) != 0:
                     self._LOGGER.error("_flush error: " + str(e) + "  Original map size: " + str(metric_map_size))
 

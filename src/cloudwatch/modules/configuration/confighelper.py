@@ -7,6 +7,7 @@ from whitelist import Whitelist, WhitelistConfigReader
 from ..client.ec2getclient import EC2GetClient
 import traceback
 
+
 class ConfigHelper(object):
     """
     The configuration helper is responsible for obtaining configuration data from number 
@@ -135,8 +136,7 @@ class ConfigHelper(object):
             try:
                 self.host = self.metadata_reader.get_instance_id()
             except Exception as e:
-                ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) +  
-                    " Using host information provided by Collectd.")
+                ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) + " Using host information provided by Collectd.")
 
     def _set_ec2_endpoint(self):
         """ Creates endpoint from region information """

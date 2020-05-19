@@ -50,7 +50,7 @@ class ConfigReader(object):
         self.push_asg = self._PUSH_ASG_DEFAULT_VALUE
         self.push_constant = self._PUSH_CONSTANT_DEFAULT_VALUE
         self.constant_dimension_value = ''
-        self.proxy_server_name=''
+        self.proxy_server_name = ''
         self.proxy_server_port = ''
         self.enable_high_resolution_metrics = self._ENABLE_HIGH_DEFINITION_METRICS_DEFAULT_VALUE
         self.flush_interval_in_seconds = ''

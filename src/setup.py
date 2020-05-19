@@ -161,7 +161,7 @@ class Command(object):
         return self._process and self._process.returncode is self.SUCCESS
 
     def run(self):
-        print self.message,  # comma stops print from adding line break at the end
+        print(self.message,)  # comma stops print from adding line break at the end
         try:
             self._process = self._get_process()
             self._capture_outputs()
@@ -187,7 +187,7 @@ class Command(object):
         result = self.NOT_OK
         if self.was_successful:
             result = self.OK
-        print result
+        print(result)
 
 
 class MetadataReader(object):
@@ -246,7 +246,7 @@ class MetadataRequestException(Exception):
 
 def install_python_packages(packages):
     try:
-        Command(detect_pip() + PIP_INSTALLATION_FLAGS + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
+        Command("{}{}{}".format(detect_pip(), PIP_INSTALLATION_FLAGS, " ".join(packages)), "Installing python dependencies", exit_on_failure=True).run()
     except CalledProcessError:
         Command(EASY_INSTALL_COMMAND + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
 
@@ -515,9 +515,9 @@ class InteractiveConfigurator(object):
     def _configure_credentials_non_interactive(self):
         if self.access_key and self.secret_key:
             self.config.credentials_path = self._get_credentials_path()
-            print "self.config.credentials_path = ", self.config.credentials_path
+            print("self.config.credentials_path = ", self.config.credentials_path)
         self.config.credentials_file_exist = path.exists(str(self.config.credentials_path))
-        print "self.config.credentials_file_exist = ", self.config.credentials_file_exist
+        print("self.config.credentials_file_exist = ", self.config.credentials_file_exist)
         if not self.config.credentials_file_exist:
             self.config.access_key = self.access_key
             self.config.secret_key = self.secret_key
@@ -625,16 +625,16 @@ class Prompt(object):
 
     def run(self):
         if self.title:
-            print self.title
+            print(self.title)
         if self.options:
             for index, option in enumerate(self.options, start=1):
-                print "  {}. {}".format(index, option)
+                print("  {}. {}".format(index, option))
         return self._get_answer()
 
     def _get_answer(self):
-        value = raw_input(self.message).strip()
+        value = input(self.message).strip()
         while self._is_value_invalid(value):
-            value = raw_input(self.message).strip()
+            value = input(self.message).strip()
         return value or str(self.default)
 
     def _is_value_invalid(self, value):
@@ -747,7 +747,7 @@ def main():
     COPY_PLUGIN_INCLUDE_FILE_CMD = CMD(COPY_CMD.format(source=PLUGIN_INCLUDE_CONFIGURATION, target="/etc/"), "Copying CloudWatch plugin include file")
     COPY_RECOMMENDED_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_COLLECTD_CONFIGURATION, target=COLLECTD_INFO.config_path), "Replacing collectd configuration")
     BACKUP_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=COLLECTD_INFO.config_path, target=COLLECTD_INFO.config_path + "." + time.strftime(TIMESTAMP_FORMAT)),
-                                 "Creating backup of the original configuration")
+                                     "Creating backup of the original configuration")
     REPLACE_WHITELIST_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_WHITELIST, target=DEFAULT_PLUGIN_CONFIGURATION_DIR), "Replacing whitelist configuration")
 
     parser = argparse.ArgumentParser(
@@ -896,7 +896,7 @@ def main():
             elif config.only_add_plugin:
                 _inject_plugin_configuration()
             else:
-                print Color.yellow("Please find instructions for the manual configuration of the plugin in the readme.md file.")
+                print(Color.yellow("Please find instructions for the manual configuration of the plugin in the readme.md file."))
         else:
             raise InstallationFailedException("The minimum supported version of collectd is " + CollectdInfo.MIN_SUPPORTED_VERSION + \
                                               ", and your version is " + COLLECTD_INFO.version + \
@@ -915,13 +915,13 @@ def main():
 
     def _inject_plugin_configuration():
         if _is_cloudwatch_plugin_configured():
-            print Color.yellow("CloudWatch collectd plugin is already configured in the existing collectd.conf file.")
+            print(Color.yellow("CloudWatch collectd plugin is already configured in the existing collectd.conf file."))
         elif _can_safely_add_python_plugin():
             with open(COLLECTD_INFO.config_path, "a") as config:
                 config.write(PLUGIN_CONFIGURATION_INCLUDE_LINE)
         else:
-            print Color.yellow("Cannot add CloudWatch collectd plugin automatically to the existing collectd configuration.\n"
-                               "Plugin must be configured manually, please find instructions in readme.md file.")
+            print(Color.yellow("Cannot add CloudWatch collectd plugin automatically to the existing collectd configuration.\n"
+                               "Plugin must be configured manually, please find instructions in readme.md file."))
 
     def _copy_recommended_configs():
         _run_command(BACKUP_COLLECTD_CONFIG_CMD)

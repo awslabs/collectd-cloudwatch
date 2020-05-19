@@ -8,7 +8,6 @@ from requests.sessions import Session
 import xml.etree.ElementTree as ET
 
 
-
 class EC2GetClient(object):
     """
     This is a simple HTTPClient wrapper which supports DescribeTags operation on EC2 endpoints. 
