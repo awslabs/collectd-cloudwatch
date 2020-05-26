@@ -1,9 +1,9 @@
 import os
 from ..logger.logger import get_logger
-from configreader import ConfigReader
-from metadatareader import MetadataReader
-from credentialsreader import CredentialsReader
-from whitelist import Whitelist, WhitelistConfigReader
+from .configreader import ConfigReader
+from .metadatareader import MetadataReader
+from .credentialsreader import CredentialsReader
+from .whitelist import Whitelist, WhitelistConfigReader
 from ..client.ec2getclient import EC2GetClient
 import traceback
 

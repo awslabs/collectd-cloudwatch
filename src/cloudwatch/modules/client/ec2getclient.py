@@ -1,7 +1,7 @@
 import re
 
 from ..plugininfo import PLUGIN_NAME, PLUGIN_VERSION
-from ec2requestbuilder import EC2RequestBuilder
+from .ec2requestbuilder import EC2RequestBuilder
 from ..logger.logger import get_logger
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session

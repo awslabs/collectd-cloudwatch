@@ -2,7 +2,7 @@ import re
 import os
 
 from ..plugininfo import PLUGIN_NAME, PLUGIN_VERSION
-from requestbuilder import RequestBuilder
+from .requestbuilder import RequestBuilder
 from ..logger.logger import get_logger
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session

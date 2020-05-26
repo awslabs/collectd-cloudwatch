@@ -1,5 +1,5 @@
-import awsutils as awsutils
-import plugininfo
+import cloudwatch.modules.awsutils as awsutils
+import cloudwatch.modules.plugininfo as plugininfo
 import datetime
 
 

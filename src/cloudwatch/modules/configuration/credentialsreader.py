@@ -1,5 +1,5 @@
 from ..awscredentials import AWSCredentials
-from readerutils import ReaderUtils
+from .readerutils import ReaderUtils
 from ..logger.logger import get_logger
 
 

@@ -1,6 +1,6 @@
 from ..awsutils import get_aws_timestamp, get_datestamp
-from signer import Signer
-from querystringbuilder import QuerystringBuilder
+from .signer import Signer
+from .querystringbuilder import QuerystringBuilder
 
 
 class BaseRequestBuilder(object):

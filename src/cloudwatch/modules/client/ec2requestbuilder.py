@@ -1,4 +1,4 @@
-from baserequestbuilder import BaseRequestBuilder
+from .baserequestbuilder import BaseRequestBuilder
 
 
 class EC2RequestBuilder(BaseRequestBuilder):

@@ -3,9 +3,9 @@ import time
 import os
 import math
 
-from client.putclient import PutClient
-from logger.logger import get_logger
-from metricdata import MetricDataStatistic, MetricDataBuilder
+from .client.putclient import PutClient
+from .logger.logger import get_logger
+from .metricdata import MetricDataStatistic, MetricDataBuilder
 
 class Flusher(object):
     """
