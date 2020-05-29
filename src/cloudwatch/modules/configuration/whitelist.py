@@ -2,8 +2,8 @@ import re
 from os import path
 from threading import Lock
 
-from .configreader import ConfigReader
-from ..logger.logger import get_logger
+from cloudwatch.modules.configuration.configreader import ConfigReader
+from cloudwatch.modules.logger.logger import get_logger
 
 
 class WhitelistConfigReader(object):

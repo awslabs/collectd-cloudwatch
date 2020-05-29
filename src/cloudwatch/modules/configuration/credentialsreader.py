@@ -1,6 +1,6 @@
-from ..awscredentials import AWSCredentials
-from .readerutils import ReaderUtils
-from ..logger.logger import get_logger
+from cloudwatch.modules.awscredentials import AWSCredentials
+from cloudwatch.modules.configuration.readerutils import ReaderUtils
+from cloudwatch.modules.logger.logger import get_logger
 
 
 class CredentialsReader(object):

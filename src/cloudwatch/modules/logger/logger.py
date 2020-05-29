@@ -2,7 +2,7 @@ import abc
 try:
     import collectd
 except:
-    from .. import collectd
+    from cloudwatch.modules import collectd
 
 
 def get_logger(channel=None):

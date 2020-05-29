@@ -5,7 +5,7 @@ from os import path, remove, rmdir
 
 from mock import patch, Mock
 
-import resources.collectd_outputs as resources
+from resources import collectd_outputs as resources
 import src.setup as installer
 from helpers.output_catcher import output_catcher
 from src.setup import Command, get_collectd_info, CollectdInfo

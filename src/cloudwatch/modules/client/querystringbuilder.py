@@ -1,6 +1,6 @@
 import operator
 
-from ..logger.logger import get_logger
+from cloudwatch.modules.logger.logger import get_logger
 from urllib.parse import urlencode
 
 

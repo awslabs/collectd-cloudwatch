@@ -1,5 +1,5 @@
-from ..logger.logger import get_logger
-from .readerutils import ReaderUtils
+from cloudwatch.modules.logger.logger import get_logger
+from cloudwatch.modules.configuration.readerutils import ReaderUtils
 
 
 class ConfigReader(object):

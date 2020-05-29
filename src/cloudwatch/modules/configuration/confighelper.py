@@ -1,10 +1,10 @@
 import os
-from ..logger.logger import get_logger
-from .configreader import ConfigReader
-from .metadatareader import MetadataReader
-from .credentialsreader import CredentialsReader
-from .whitelist import Whitelist, WhitelistConfigReader
-from ..client.ec2getclient import EC2GetClient
+from cloudwatch.modules.logger.logger import get_logger
+from cloudwatch.modules.configuration.configreader import ConfigReader
+from cloudwatch.modules.configuration.metadatareader import MetadataReader
+from cloudwatch.modules.configuration.credentialsreader import CredentialsReader
+from cloudwatch.modules.configuration.whitelist import Whitelist, WhitelistConfigReader
+from cloudwatch.modules.client.ec2getclient import EC2GetClient
 import traceback
 
 

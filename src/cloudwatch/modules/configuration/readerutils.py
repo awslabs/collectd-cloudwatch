@@ -1,7 +1,7 @@
 import re
 import os
 
-from ..logger.logger import get_logger
+from cloudwatch.modules.logger.logger import get_logger
 
 
 class ReaderUtils(object):

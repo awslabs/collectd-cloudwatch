@@ -3,9 +3,9 @@ import time
 import os
 import math
 
-from .client.putclient import PutClient
-from .logger.logger import get_logger
-from .metricdata import MetricDataStatistic, MetricDataBuilder
+from cloudwatch.modules.client.putclient import PutClient
+from cloudwatch.modules.logger.logger import get_logger
+from cloudwatch.modules.metricdata import MetricDataStatistic, MetricDataBuilder
 
 class Flusher(object):
     """

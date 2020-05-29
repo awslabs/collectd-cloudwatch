@@ -1,9 +1,9 @@
 import re
 import os
 
-from ..plugininfo import PLUGIN_NAME, PLUGIN_VERSION
-from .requestbuilder import RequestBuilder
-from ..logger.logger import get_logger
+from cloudwatch.modules.plugininfo import PLUGIN_NAME, PLUGIN_VERSION
+from cloudwatch.modules.client.requestbuilder import RequestBuilder
+from cloudwatch.modules.logger.logger import get_logger
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 from tempfile import gettempdir

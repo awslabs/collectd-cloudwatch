@@ -1,8 +1,8 @@
 import re
 
-from ..plugininfo import PLUGIN_NAME, PLUGIN_VERSION
-from .ec2requestbuilder import EC2RequestBuilder
-from ..logger.logger import get_logger
+from cloudwatch.modules.plugininfo import PLUGIN_NAME, PLUGIN_VERSION
+from cloudwatch.modules.client.ec2requestbuilder import EC2RequestBuilder
+from cloudwatch.modules.logger.logger import get_logger
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 import xml.etree.ElementTree as ET

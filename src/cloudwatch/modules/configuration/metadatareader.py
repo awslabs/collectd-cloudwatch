@@ -1,8 +1,8 @@
 from json import loads
 from requests import Session, codes
 from requests.adapters import HTTPAdapter
-from ..logger.logger import get_logger
-from ..awscredentials import AWSCredentials
+from cloudwatch.modules.logger.logger import get_logger
+from cloudwatch.modules.awscredentials import AWSCredentials
 
 
 class MetadataReader(object):
