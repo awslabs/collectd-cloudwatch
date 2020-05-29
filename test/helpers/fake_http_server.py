@@ -1,11 +1,12 @@
-import BaseHTTPServer
+import http.server as BaseHTTPServer
 import json
 import os.path
 import socket
 import threading
 import time
-import urllib2
-from SimpleHTTPServer import SimpleHTTPRequestHandler
+import urllib.request
+import urllib.error
+from http.server import SimpleHTTPRequestHandler
 
 
 class FakeServer(object):
@@ -103,7 +104,7 @@ class FakeServer(object):
                 self._httpd.shutdown()
                 self._serve_in_loop = False
             elif self._ready_to_serve:
-                urllib2.urlopen(self.get_url()).read()  # generate empty request required to close listener
+                urllib.request.urlopen(self.get_url()).read()  # generate empty request required to close listener
             self._ready_to_serve = False
             self._httpd.server_close() 
             self._server_started = False
