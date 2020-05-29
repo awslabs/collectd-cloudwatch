@@ -1,7 +1,7 @@
 import unittest
 
 from mock import MagicMock
-from test.helpers.fake_http_server import FakeServer
+from helpers.fake_http_server import FakeServer
 from cloudwatch.modules.configuration.confighelper import ConfigHelper
 from cloudwatch.modules.metricdata import MetricDataBuilder
 

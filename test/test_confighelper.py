@@ -5,7 +5,7 @@ from mock import Mock
 import cloudwatch.modules.collectd as collectd
 from cloudwatch.modules.configuration.confighelper import ConfigHelper
 from cloudwatch.modules.configuration.metadatareader import MetadataReader
-from test.helpers.fake_http_server import FakeServer
+from helpers.fake_http_server import FakeServer
 
 
 class ConfigHelperTest(unittest.TestCase):
