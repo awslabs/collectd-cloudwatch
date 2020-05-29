@@ -3,6 +3,7 @@ import unittest
 
 from cloudwatch.modules.awsutils import get_aws_timestamp, get_datestamp
 
+
 class AWSUtilsTest(unittest.TestCase):
     
     def test_get_timestamp_format(self):

@@ -176,4 +176,4 @@ class FakeServer(object):
             os.remove(FakeServer.RESPONSE_CODE_FILE)
             os.remove(FakeServer.REQUEST_FILE)
         except:
-            pass # Don't raise exceptions if cannot delete files
+            pass  # Don't raise exceptions if cannot delete files

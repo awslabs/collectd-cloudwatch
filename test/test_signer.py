@@ -4,6 +4,7 @@ from cloudwatch.modules.awscredentials import AWSCredentials
 from cloudwatch.modules.awsutils import get_aws_timestamp
 from cloudwatch.modules.client.signer import Signer
 
+
 class SignerTest(unittest.TestCase):
     
     def setUp(self):
@@ -33,7 +34,7 @@ class SignerTest(unittest.TestCase):
         generated_request = self.signer._build_canonical_request(query_string, canonical_headers, signed_headers, payload)
         self.assertEquals(expected_request, generated_request)
 
-# regression tests
+    # regression tests
     def test_hash(self):
         signer = self.get_regression_signer()
         test_data = "test data string"
@@ -74,4 +75,4 @@ class SignerTest(unittest.TestCase):
         self.region = "eu-west-1"
         self.service = "monitoring"
         self.algorithm = "AWS4-HMAC-SHA256"
-        return Signer(self.credentials, self.region, self.service, self.algorithm)     
+        return Signer(self.credentials, self.region, self.service, self.algorithm)

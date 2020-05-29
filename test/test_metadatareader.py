@@ -3,6 +3,7 @@ import requests
 from helpers.fake_http_server import FakeServer
 from cloudwatch.modules.configuration.metadatareader import MetadataReader, MetadataRequestException
 
+
 class MetadataReaderTest(unittest.TestCase):
     FAKE_SERVER = None
     REAL_REGION_STRING = "eu-west-1a"
@@ -27,7 +28,7 @@ class MetadataReaderTest(unittest.TestCase):
     
     def test_get_region_from_metadata(self):
         self.server.set_expected_response(MetadataReaderTest.REAL_REGION_STRING, 200)
-        self.assertEquals(MetadataReaderTest.REAL_REGION_STRING[:-1], self.metadata_reader.get_region()) #trimmed last character 'a'
+        self.assertEquals(MetadataReaderTest.REAL_REGION_STRING[:-1], self.metadata_reader.get_region())  # trimmed last character 'a'
         self.server.set_expected_response("us-east-2c", 200)
         self.assertEquals("us-east-2", self.metadata_reader.get_region())
     

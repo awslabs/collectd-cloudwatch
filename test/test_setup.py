@@ -127,6 +127,7 @@ class ColorTest(unittest.TestCase):
         self.assertEquals(installer.Color.YELLOW + test_string + self.END, installer.Color.yellow(test_string))
         self.assertEquals(installer.Color.CYAN + test_string + self.END, installer.Color.cyan(test_string))
 
+
 class NonInteractiveTests(unittest.TestCase):
     plugin_config = installer.PluginConfig
     metadata_reader = None
@@ -149,7 +150,6 @@ class NonInteractiveTests(unittest.TestCase):
 
     tmp = tempfile.mkdtemp(prefix='/tmp/')
     creds_path = tmp + '/' + 'test_creds_file'
-
 
     def test_params(self):
         non_interactive_installer = installer.InteractiveConfigurator(self.plugin_config, self.metadata_reader,

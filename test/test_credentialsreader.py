@@ -3,6 +3,7 @@ import unittest
 from mock import MagicMock, Mock
 from cloudwatch.modules.configuration.credentialsreader import CredentialsReader, CredentialsReaderException
 
+
 class CredentialsReaderTest(unittest.TestCase):
     CONFIG_DIR = "./test/config_files/"
     VALID_CREDENTIALS_FILE = CONFIG_DIR + "valid_credentials_file"
@@ -63,9 +64,10 @@ class CredentialsReaderTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.config_reader = CredentialsReader()
 
+
 def assert_credentials(credentials_reader):
     assert credentials_reader.credentials
     creds = credentials_reader.credentials
     assert creds.access_key == CredentialsReaderTest.VALID_ACCESS_KEY_STRING
     assert creds.secret_key == CredentialsReaderTest.VALID_SECRET_KEY_STRING
-    
+

@@ -4,6 +4,7 @@ from mock import MagicMock, Mock
 
 from cloudwatch.modules.configuration.readerutils import ReaderUtils
 
+
 class ReaderUtilsTest(unittest.TestCase):
     CONFIG_DIR = "./test/config_files/"
     VALID_CONFIG_FULL = CONFIG_DIR + "valid_config_full"
@@ -68,8 +69,8 @@ class ReaderUtilsTest(unittest.TestCase):
         reader = ReaderUtils(self.INVALID_CONFIG_WITH_HIGH_RESOLUTION_PARAMETERS)
         enable_high_resolution_metrics = reader.get_string("enable_high_resolution_metrics")
         flush_interval_in_seconds = reader.get_string("flush_interval_in_seconds")
-        self.assertEquals('Tru', enable_high_resolution_metrics);
-        self.assertEquals('59', flush_interval_in_seconds);
+        self.assertEquals('Tru', enable_high_resolution_metrics)
+        self.assertEquals('59', flush_interval_in_seconds)
 
     def test_get_boolean_from_invalid_config(self):
         reader = ReaderUtils(self.INVALID_CONFIG_WITH_DEBUG)
@@ -112,7 +113,7 @@ class ReaderUtilsTest(unittest.TestCase):
     def test_valid_real_config(self):
         reader = ReaderUtils(self.VALID_REAL_CONFIG)
         region = reader.get_string("region")
-        self.assertEquals("", region) # region is commented out
+        self.assertEquals("", region)  # region is commented out
         host = reader.get_string("host")
         self.assertEquals("Server1", host)
         credentials_path = reader.get_string("credentials_path")

@@ -186,7 +186,7 @@ class ConfigHelperTest(unittest.TestCase):
         self.assertTrue(self.config_helper.whitelist.is_whitelisted("random-metric-name"))
         
     def _load_and_assert_iam_role_credentials(self, expected_access, expected_secret, expected_token):
-        creds_json = '{"AccessKeyId" : "' + expected_access +'", "SecretAccessKey" : "' + expected_secret + '", "Token" : "' + expected_token + '" }'
+        creds_json = '{"AccessKeyId" : "' + expected_access + '", "SecretAccessKey" : "' + expected_secret + '", "Token" : "' + expected_token + '" }'
         self.server.set_expected_response(creds_json, 200)
         ConfigHelper._DEFAULT_CREDENTIALS_PATH = ""
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITHOUT_CREDS,metadata_server=self.server.get_url())
@@ -208,4 +208,3 @@ def assert_credentials(credentials, expected_access=ConfigHelperTest.VALID_ACCES
     assert credentials.access_key == expected_access
     assert credentials.secret_key == expected_secret
     assert credentials.token == expected_token
-

@@ -4,6 +4,7 @@ import cloudwatch.modules.collectd as collectd
 from mock import Mock
 from cloudwatch.modules.logger.logger import get_logger, _Logger, _CollectdLogger
 
+
 class LoggerTest(unittest.TestCase):
         
     def setUp(self):
@@ -44,4 +45,3 @@ class LoggerTest(unittest.TestCase):
         self.logger.error(msg)
         self.assertTrue(collectd.error.called)
         collectd.error.assert_called_with(self.expected_prefix + msg)
-        
