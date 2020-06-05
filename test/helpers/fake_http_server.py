@@ -74,7 +74,7 @@ class FakeServer(object):
             self.send_header("Content-type", response_type)
             self.send_header("Content-length", str(len(self._response)))
             self.end_headers()
-            self.wfile.write(self._response)
+            self.wfile.write(self._response.encode("utf-8"))
 
         def _update_response(self):
             self._response = self.read_file_or_default_to(FakeServer.RESPONSE_FILE, FakeServer.DEFAULT_RESPONSE)

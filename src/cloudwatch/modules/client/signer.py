@@ -44,13 +44,24 @@ class Signer(object):
         return self.algorithm + "\n" + aws_timestamp + '\n' + credential_scope + '\n' + self._hash(canonical_request)
 
     def _hash(self, data):
+        # change type to `bytes`
+        if type(data) is str:
+            data = data.encode("utf-8")
         return sha256(data).hexdigest()
     
     def _sign(self, key, msg):
-        return hmac.new(key, msg.encode("utf-8"), sha256).digest()
+        # change type to `bytes`
+        if type(key) is str:
+            key = key.encode("utf-8")
+        if type(msg) is str:
+            msg = msg.encode("utf-8")
+        return hmac.new(key, msg, sha256).digest()
      
     def _build_signature_key(self, key, date_stamp, region_name, service_name):
-        kDate = self._sign(('AWS4' + key).encode('utf-8'), date_stamp)
+        # change type to `str`
+        if type(key) is bytes:
+            key = key.decode("utf-8")
+        kDate = self._sign('AWS4' + key, date_stamp)
         kRegion = self._sign(kDate, region_name)
         kService = self._sign(kRegion, service_name)
         kSigning = self._sign(kService, self._V4_TERMINATOR)

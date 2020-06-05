@@ -189,7 +189,7 @@ class Flusher(object):
             prepare_batch = self._prepare_batch()
             try:
                 while True:
-                    metric_batch = prepare_batch.next()
+                    metric_batch = prepare_batch.__next__()
                     if not metric_batch:
                         break
                     self.client.put_metric_data(MetricDataStatistic.NAMESPACE, metric_batch)

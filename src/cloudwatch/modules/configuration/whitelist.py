@@ -1,6 +1,7 @@
 import re
 from os import path
 from threading import Lock
+import sys
 
 from cloudwatch.modules.configuration.configreader import ConfigReader
 from cloudwatch.modules.logger.logger import get_logger
@@ -62,7 +63,8 @@ class WhitelistConfigReader(object):
                 return True
             return False
         except Exception as e:
-            self._LOGGER.warning("The whitelist rule: '{}' is invalid, reason: {}".format(str(regex_string), str(e.message)))
+            _traceback = sys.exc_info()[2]
+            self._LOGGER.warning("The whitelist rule: '{}' is invalid, reason: {}".format(str(regex_string), str(e.with_traceback(_traceback).msg)))
             return False
 
     def _is_allowed_regex(self, regex_string):

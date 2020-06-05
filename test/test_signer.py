@@ -44,13 +44,13 @@ class SignerTest(unittest.TestCase):
     def test_sign(self):
         signer = self.get_regression_signer()
         data = "testing&canonical&request"
-        historical_result = "\xfb\xd2\x86\x87&\xdaC\x03\x98\x9dIC\xcbP?\xa8\\\xfeJ\x82\x03\xe6w\xd4\x963Q\xfd\xe5-\xdb\xcf"
+        historical_result = b"\xfb\xd2\x86\x87&\xdaC\x03\x98\x9dIC\xcbP?\xa8\\\xfeJ\x82\x03\xe6w\xd4\x963Q\xfd\xe5-\xdb\xcf"
         self.assertEquals(historical_result, signer._sign(signer.credentials.secret_key, data))
         
     def test_build_signature_key(self):
         signer = self.get_regression_signer()
         datestamp = "20150725"
-        historical_result = "=7\xa5&\xa3%\xd5Q\x9a\x1ah\xee2mSw<\xdd\xf8\x0e\xde\xdf5\x94\xa6(M`\x00\xd1\x81\xea"
+        historical_result = b"=7\xa5&\xa3%\xd5Q\x9a\x1ah\xee2mSw<\xdd\xf8\x0e\xde\xdf5\x94\xa6(M`\x00\xd1\x81\xea"
         new_result = signer._build_signature_key(signer.credentials.secret_key, datestamp, signer.region, signer.service)
         self.assertEquals(historical_result, new_result)
         

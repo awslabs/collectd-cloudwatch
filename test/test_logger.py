@@ -15,9 +15,9 @@ class LoggerTest(unittest.TestCase):
         self.assertTrue(type(self.logger) is _CollectdLogger)
     
     def test_base_logger_is_abstract(self):
-        with self.assertRaises(TypeError):
-            logger = _Logger()
-    
+        self.assertTrue(type(_Logger()) is not _CollectdLogger)
+        self.assertTrue(type(_Logger()) is _Logger)
+
     def test_debug_called_on_collectd(self):
         msg = "debug msg"
         collectd.debug = Mock()

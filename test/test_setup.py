@@ -70,7 +70,7 @@ class CommandTest(unittest.TestCase):
             command = Command("echo test", self.TEST_MSG)
             command.run()
             output = out.getvalue().strip()
-            self.assertEquals(self.TEST_MSG + " " + command.OK, output)
+            self.assertEquals(self.TEST_MSG + "\n" + command.OK, output)
             self.assertEquals("test", command.stdout)
             self.assertTrue(command.was_successful)
 
@@ -79,7 +79,7 @@ class CommandTest(unittest.TestCase):
             command = Command("which " + self.INVALID_COMMAND, self.TEST_MSG)
             command.run()
             output = out.getvalue().strip()
-            self.assertEquals(self.TEST_MSG + " " + command.NOT_OK, output)
+            self.assertEquals(self.TEST_MSG + "\n" + command.NOT_OK, output)
             self.assertFalse(command.was_successful)
 
     def test_output_of_invalid_command(self):

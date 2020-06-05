@@ -231,7 +231,7 @@ class FlusherTest(unittest.TestCase):
     def test_prepare_batches_respects_the_size_limit(self):
         for i in range(self.flusher._MAX_METRICS_PER_PUT_REQUEST + 1):
             self.flusher._aggregate_metric(self._get_vl_mock("plugin" + str(i), "plugin_instance", "type", "type_instance", "host", [i], 0))
-        batch = self.flusher._prepare_batch().next()
+        batch = self.flusher._prepare_batch().__next__()
         self.assertEquals(self.flusher._MAX_METRICS_PER_PUT_REQUEST, len(list(batch)))
         batch = self.flusher._prepare_batch()
         self.assertEquals(1, len(list(batch)))
