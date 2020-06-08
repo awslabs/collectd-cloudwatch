@@ -888,12 +888,10 @@ def main():
             COPY_PLUGIN_INCLUDE_FILE_CMD, COPY_RECOMMENDED_COLLECTD_CONFIG_CMD, REPLACE_WHITELIST_CMD
         )
 
-    GITHUB_USER_NAME = "awslabs" if args.github_username is None else args.github_username
-    GITHUB_REPO_BRANCH = "master" if args.github_repo_branch is None else args.github_repo_branch
     (TAR_FILE, DOWNLOAD_PLUGIN_DIR, NEW_PLUGIN_FILES, RECOMMENDED_COLLECTD_CONFIGURATION, RECOMMENDED_WHITELIST,
      PLUGIN_INCLUDE_CONFIGURATION, DOWNLOAD_PLUGIN_CMD, UNTAR_PLUGIN_CMD, COPY_PLUGIN_CMD,
      COPY_PLUGIN_INCLUDE_FILE_CMD, COPY_RECOMMENDED_COLLECTD_CONFIG_CMD,
-     REPLACE_WHITELIST_CMD) = set_github_repository(GITHUB_USER_NAME, GITHUB_REPO_BRANCH)
+     REPLACE_WHITELIST_CMD) = set_github_repository(args.github_username, args.github_repo_branch)
 
     def install_plugin():
         try:
