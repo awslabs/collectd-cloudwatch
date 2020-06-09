@@ -260,7 +260,7 @@ def install_python_packages(packages):
 
 def detect_pip():
     try:
-        return get_path_to_executable("pip")
+        return get_path_to_executable("pip3")
     except CalledProcessError:
         return get_path_to_executable("python-pip")
 
