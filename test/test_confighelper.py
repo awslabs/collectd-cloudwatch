@@ -6,7 +6,7 @@ import cloudwatch.modules.collectd as collectd
 from cloudwatch.modules.configuration.confighelper import ConfigHelper
 from cloudwatch.modules.configuration.metadatareader import MetadataReader
 from helpers.fake_http_server import FakeServer
-
+from helpers.fake_metadata import FAKE_REGION, FAKE_IDENTITY_DOCUMENT_STRING
 
 class ConfigHelperTest(unittest.TestCase):
     CONFIG_DIR = "./test/config_files/"
@@ -51,12 +51,12 @@ class ConfigHelperTest(unittest.TestCase):
         ConfigHelper._DEFAULT_CREDENTIALS_PATH = self.VALID_CREDENTIALS_FILE
     
     def test_get_credentials_from_config_and_region_from_metadata(self):
-        self.server.set_expected_response("eu-west-1a", 200)
+        self.server.set_expected_response(FAKE_IDENTITY_DOCUMENT_STRING, 200)
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_CREDS_ONLY,metadata_server=self.server.get_url())
         assert_credentials(self.config_helper._credentials)
         self.assertEquals(None, self.config_helper.credentials.token)
         self.assertFalse(self.config_helper._use_iam_role_credentials)
-        self.assertEquals("eu-west-1", self.config_helper.region)
+        self.assertEquals(FAKE_REGION, self.config_helper.region)
     
     def test_timeout_on_getting_region_from_metadata(self):
         self.server.set_timeout_delay(MetadataReader._RESPONSE_TIMEOUT_IN_SECONDS * (MetadataReader._TOTAL_RETRIES + 1))
@@ -144,7 +144,7 @@ class ConfigHelperTest(unittest.TestCase):
         self.assertEquals("https://monitoring.eu-west-1.amazonaws.com/", self.config_helper.endpoint)
     
     def test_set_endpoint_from_metadata_server(self):
-        self.server.set_expected_response("eu-west-1a", 200)
+        self.server.set_expected_response(FAKE_IDENTITY_DOCUMENT_STRING, 200)
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_CREDS_ONLY, metadata_server=self.server.get_url())
         self.assertEquals("https://monitoring.eu-west-1.amazonaws.com/", self.config_helper.endpoint)
     
@@ -156,7 +156,7 @@ class ConfigHelperTest(unittest.TestCase):
     def test_instance_id_is_used_as_hostname_if_not_specified_in_config(self):
         expected_host = "Valid_Instance_ID"
         self.server.set_expected_response(expected_host, 200)
-        self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_CREDS_ONLY, metadata_server=self.server.get_url())
+        self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITH_CREDS_AND_REGION, metadata_server=self.server.get_url())
         self.assertEquals(expected_host, self.config_helper.host)
     
     def test_exception_is_handled_when_instance_id_cannot_be_retrieved(self):
