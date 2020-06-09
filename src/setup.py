@@ -122,6 +122,9 @@ class Color(object):
 def get_collectd_info():
     exec_path = _get_collectd_exec()
     output = check_output([exec_path, COLLECTD_HELP_ARGS])
+    # change type of `output` to str
+    if type(output) is bytes:
+        output = output.decode("utf-8")
     version = VERSION_REGEX.search(output).group(1)
     config_path = CONFIG_FILE_REGEX.search(output).group(1)
     return CollectdInfo(exec_path, config_path, version)
@@ -137,7 +140,10 @@ def _get_collectd_exec():
 
 
 def get_path_to_executable(command):
-    return check_output(FIND_COMMAND.format(command), shell=True).strip()
+    _path = check_output(FIND_COMMAND.format(command), shell=True).strip()
+    if type(_path) is bytes:
+        _path = _path.decode("utf-8")
+    return _path
 
 
 class Command(object):
