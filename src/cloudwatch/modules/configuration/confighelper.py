@@ -140,7 +140,7 @@ class ConfigHelper(object):
 
     def _set_ec2_endpoint(self):
         """ Creates endpoint from region information """
-        if self.region is "localhost":
+        if self.region == "localhost":
             self.ec2_endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com.cn/"
