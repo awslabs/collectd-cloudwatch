@@ -205,6 +205,8 @@ class MetadataReader(object):
     _REQUEST_TIMEOUT = (_CONNECT_TIMEOUT_IN_SECONDS, _RESPONSE_TIMEOUT_IN_SECONDS)
     _TOKEN_REQUEST = "latest/api/token"
     _TOKEN_TTL_SECONDS = 21600 # 6 hours
+    _X_AWS_EC_METADATA_TOKEN = 'X-aws-ec2-metadata-token'
+    _TTL_SECONDS = "X-aws-ec2-metadata-token-ttl-seconds"
 
     def __init__(self):
         self.metadata_server = self._METADATA_SERVICE_ADDRESS
@@ -236,7 +238,7 @@ class MetadataReader(object):
         try:
             session = Session()
             session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
-            headers = {'X-aws-ec2-metadata-token':self.token}
+            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
             result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
         except Exception as e:
             raise MetadataRequestException("Cannot access metadata service. Cause: " + str(e))
@@ -245,7 +247,7 @@ class MetadataReader(object):
             self.token = self._get_metadata_token()
             session = Session()
             session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
-            headers = {'X-aws-ec2-metadata-token':self.token}
+            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
             result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
         if result.status_code is not codes.ok:
             raise MetadataRequestException("Cannot retrieve configuration from metadata service. Status code: " + str(result.status_code))
@@ -260,7 +262,7 @@ class MetadataReader(object):
         try:
             session = Session()
             session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
-            headers = {"X-aws-ec2-metadata-token-ttl-seconds":str(self._TOKEN_TTL_SECONDS)}
+            headers = {self._TTL_SECONDS:str(self._TOKEN_TTL_SECONDS)}
             result = session.put(self.metadata_server + self._TOKEN_REQUEST, timeout=self._REQUEST_TIMEOUT, headers=headers)
         except Exception as e:
             raise MetadataRequestException("%s cannot access metadata service. url:%s, Cause: %s " %(self._get_metadata_token.__name__, self._TOKEN_REQUEST, str(e)) )

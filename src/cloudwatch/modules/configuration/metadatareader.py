@@ -5,6 +5,8 @@ from ..logger.logger import get_logger
 from ..awscredentials import AWSCredentials
 
 
+
+
 class MetadataReader(object):
     """
     The metadata reader class is responsible for retrieving configuration values from the local metadata server.
@@ -22,6 +24,8 @@ class MetadataReader(object):
     _REQUEST_TIMEOUT = (_CONNECT_TIMEOUT_IN_SECONDS, _RESPONSE_TIMEOUT_IN_SECONDS)
     _TOKEN_REQUEST = "latest/api/token"
     _TOKEN_TTL_SECONDS = 21600 # 6 hours
+    _X_AWS_EC_METADATA_TOKEN = 'X-aws-ec2-metadata-token'
+    _TTL_SECONDS = "X-aws-ec2-metadata-token-ttl-seconds"
 
     def __init__(self, metadata_server):
         self.metadata_server = metadata_server
@@ -62,12 +66,12 @@ class MetadataReader(object):
                    'http://169.254.169.254/latest/meta-data/placement/availability-zone/' 
                    then the request part is 'latest/meta-data/placement/availability-zone/'.
         """
-        headers = {'X-aws-ec2-metadata-token':self.token}
+        headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
         result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
         if result.status_code == codes.unauthorized:
             self.token = self._get_metadata_token()
             self._LOGGER.info("Token length: %s " % (str(len(self.token))) )
-            headers = {'X-aws-ec2-metadata-token':self.token}
+            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
             result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
         if result.status_code is codes.ok:
             return str(result.text)
@@ -80,7 +84,7 @@ class MetadataReader(object):
         This method retrieves token from metadata service.
         """
         try:
-            headers = {"X-aws-ec2-metadata-token-ttl-seconds":str(self._TOKEN_TTL_SECONDS)}
+            headers = {self._TTL_SECONDS:str(self._TOKEN_TTL_SECONDS)}
             result = self.session.put(self.metadata_server + self._TOKEN_REQUEST, timeout=self._REQUEST_TIMEOUT, headers=headers)
         except Exception as e:
             raise MetadataRequestException("%s cannot access metadata service. url:%s, Cause: %s " %(self._get_metadata_token.__name__, self._TOKEN_REQUEST, str(e)) )
