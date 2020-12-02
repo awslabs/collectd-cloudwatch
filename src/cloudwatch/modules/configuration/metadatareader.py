@@ -70,7 +70,7 @@ class MetadataReader(object):
         result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
         if result.status_code == codes.unauthorized:
             self.token = self._get_metadata_token()
-            self._LOGGER.info("Token length: %s " % (str(len(self.token))) )
+            self._LOGGER.info("request: %s, Token length: %s " % (request, str(len(self.token))) )
             headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
             result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
         if result.status_code is codes.ok:
