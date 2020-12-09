@@ -244,11 +244,19 @@ class MetadataReader(object):
             raise MetadataRequestException("Cannot access metadata service. Cause: " + str(e))
 
         if result.status_code == codes.unauthorized:
-            self.token = self._get_metadata_token()
-            session = Session()
-            session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
-            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
-            result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            try:
+                self.token = self._get_metadata_token()
+                session = Session()
+                session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
+                headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
+                result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            except Exception as e:
+                print(Color.yellow("\n Failed to retrieve IMDSV2, switch to IMDSV1 explicitly."))
+                session = Session()
+                session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
+                result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
+
+
         if result.status_code is not codes.ok:
             raise MetadataRequestException("Cannot retrieve configuration from metadata service. Status code: " + str(result.status_code))
         return str(result.text)

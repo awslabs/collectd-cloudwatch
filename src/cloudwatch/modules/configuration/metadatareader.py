@@ -69,10 +69,14 @@ class MetadataReader(object):
         headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
         result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
         if result.status_code == codes.unauthorized:
-            self.token = self._get_metadata_token()
-            self._LOGGER.info("request: %s, Token length: %s " % (request, str(len(self.token))) )
-            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
-            result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            try:
+                self.token = self._get_metadata_token()
+                self._LOGGER.info("request: %s, Token length: %s " % (request, str(len(self.token))) )
+                headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
+                result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            except Exception as e:
+                self._LOGGER.info("Failed to retrieve IMDSV2, switch to IMDSV1 explicitly.")
+                result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
         if result.status_code is codes.ok:
             return str(result.text)
         else:
