@@ -44,7 +44,15 @@ PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudw
 PLUGIN_CONFIGURATION_INCLUDE_LINE = 'Include "/etc/collectd-cloudwatch.conf"\r\n'
 APT_INSTALL_COMMAND = "apt-get install -y "
 YUM_INSTALL_COMMAND = "yum install -y "
-SYSTEM_DEPENDENCIES = ["python-pip", "python-setuptools"]
+APK_INSTALL_COMMAND = "apk --no-cache add "
+SYSTEM_DEPENDENCIES = {
+    "Ubuntu": ["python-pip", "python-setuptools"],
+    "Red Hat Enterprise Linux Server": ["python-pip", "python-setuptools"],
+    "Amazon Linux AMI": ["python-pip", "python-setuptools"],
+    "Amazon Linux": ["python-pip", "python-setuptools"],
+    "CentOS Linux": ["python-pip", "python-setuptools"],
+    "Alpine Linux": ["python2-dev", "py-setuptools"],
+}
 PIP_INSTALLATION_FLAGS = " install --quiet --upgrade --force-reinstall "
 EASY_INSTALL_COMMAND = "easy_install -U --quiet "
 PYTHON_DEPENDENCIES = ["requests"]
@@ -67,6 +75,7 @@ DISTRIBUTION_TO_INSTALLER = {
     "Amazon Linux AMI": YUM_INSTALL_COMMAND,
     "Amazon Linux": YUM_INSTALL_COMMAND,
     "CentOS Linux": YUM_INSTALL_COMMAND,
+    "Alpine Linux": APK_INSTALL_COMMAND,
 }
 
 
@@ -297,7 +306,8 @@ def detect_pip():
 
 
 def install_packages(packages):
-    command = DISTRIBUTION_TO_INSTALLER[detect_linux_distribution()] + " ".join(packages)
+    distribution = detect_linux_distribution()
+    command = DISTRIBUTION_TO_INSTALLER[distribution] + " ".join(packages[distribution])
     Command(command, "Installing dependencies").run()
 
 
