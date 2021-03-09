@@ -236,26 +236,14 @@ class MetadataReader(object):
         from requests import Session, codes
         from requests.adapters import HTTPAdapter
         try:
-            session = Session()
-            session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
-            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
-            result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            result = self._v2_call(request)
+            # fallback to v1
+            if not (result and result.status_code is codes.ok):
+                print("Fallback to IMDSV1")
+                result = self._v1_call(request)
+
         except Exception as e:
             raise MetadataRequestException("Cannot access metadata service. Cause: " + str(e))
-
-        if result.status_code == codes.unauthorized:
-            try:
-                self.token = self._get_metadata_token()
-                session = Session()
-                session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
-                headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
-                result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
-            except Exception as e:
-                print(Color.yellow("\n Failed to retrieve IMDSV2, switch to IMDSV1 explicitly."))
-                session = Session()
-                session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
-                result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
-
 
         if result.status_code is not codes.ok:
             raise MetadataRequestException("Cannot retrieve configuration from metadata service. Status code: " + str(result.status_code))
@@ -277,6 +265,29 @@ class MetadataReader(object):
         if result.status_code is not codes.ok:
             raise MetadataRequestException("%s cannot retrieve configuration from metadata service. url:%s, Status code: %s"  %(self._get_metadata_token.__name__, self._TOKEN_REQUEST, str(result.status_code)))
         return str(result.text)
+
+    def _v1_call(self, request):
+        from requests import Session, codes
+        from requests.adapters import HTTPAdapter
+        session = Session()
+        session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
+        result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
+        return result
+
+    def _v2_call(self, request):
+        from requests import Session, codes
+        from requests.adapters import HTTPAdapter
+        print ("Try IMDSV2")
+        try:
+            self.token = self._get_metadata_token()
+            session = Session()
+            session.mount("http://", HTTPAdapter(max_retries=self._MAX_RETRIES))
+            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
+            result = session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            return result
+        except Exception as e:
+            print(Color.yellow("\n Failed to retrieve IMDSV2, switch to IMDSV1 explicitly."))
+            return False
 
 class MetadataRequestException(Exception):
     pass
