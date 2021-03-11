@@ -66,22 +66,38 @@ class MetadataReader(object):
                    'http://169.254.169.254/latest/meta-data/placement/availability-zone/' 
                    then the request part is 'latest/meta-data/placement/availability-zone/'.
         """
-        headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
-        result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
-        if result.status_code == codes.unauthorized:
-            try:
-                self.token = self._get_metadata_token()
-                self._LOGGER.info("request: %s, Token length: %s " % (request, str(len(self.token))) )
-                headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
-                result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
-            except Exception as e:
-                self._LOGGER.info("Failed to retrieve IMDSV2, switch to IMDSV1 explicitly.")
-                result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
+        result = self._v2_call(request)
+        if result and result.status_code is codes.ok:
+            return str(result.text)
+
+        result = self._v1_call(request)
         if result.status_code is codes.ok:
             return str(result.text)
         else:
             self._LOGGER.error("The request: '" + str(request) + "' failed with status code: '" + str(result.status_code) + "' and message: '" + str(result.text) +"'.")
             raise MetadataRequestException("Cannot retrieve configuration from metadata service. Status code: " + str(result.status_code))
+
+    def _v1_call(self, request):
+        self._LOGGER.info("[debug] Fallback to IMDSV1")
+        result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT)
+        return result
+
+    def _v2_call(self, request):
+        self._LOGGER.info("[debug] Try IMDSV2")
+        try:
+            if not self.token:
+                self.token = self._get_metadata_token()
+            headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
+            result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            # In case that token expired, we need to try v2 again.
+            if result.status_code == codes.unauthorized:
+                self._LOGGER.info("[debug] unauthorized token, try IMDSV2 again.")
+                self.token = self._get_metadata_token()
+                headers = {self._X_AWS_EC_METADATA_TOKEN:self.token}
+                result = self.session.get(self.metadata_server + request, timeout=self._REQUEST_TIMEOUT, headers=headers)
+            return result
+        except Exception as e:
+            return False
 
     def _get_metadata_token(self):
         """
