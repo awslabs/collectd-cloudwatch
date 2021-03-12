@@ -83,7 +83,6 @@ class MetadataReader(object):
         return result
 
     def _v2_call(self, request):
-        self._LOGGER.info("[debug] Try IMDSV2")
         try:
             if not self.token:
                 self.token = self._get_metadata_token()
