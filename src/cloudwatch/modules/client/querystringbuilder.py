@@ -1,7 +1,7 @@
 import operator
 
-from ..logger.logger import get_logger
-from urllib import urlencode
+from cloudwatch.modules.logger.logger import get_logger
+from urllib.parse import urlencode
 
 
 class QuerystringBuilder(object):
@@ -43,7 +43,6 @@ class QuerystringBuilder(object):
         # by default urlencode replace spaces with '+' but CloudWatch requires them to be encoded to '%20'
         url_string = urlencode(sorted_query_data).replace('+', '%20') 
         return url_string
-
 
     def _build_metric_map(self, metric_list):
         """ 

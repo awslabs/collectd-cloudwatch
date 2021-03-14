@@ -3,6 +3,7 @@ import cloudwatch_writer as plugin
 
 from mock import patch, Mock, MagicMock 
 
+
 class CloudWatchWriter(unittest.TestCase):
     
     def setUp(self):

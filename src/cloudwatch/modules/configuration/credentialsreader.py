@@ -1,6 +1,6 @@
-from ..awscredentials import AWSCredentials
-from readerutils import ReaderUtils
-from ..logger.logger import get_logger
+from cloudwatch.modules.awscredentials import AWSCredentials
+from cloudwatch.modules.configuration.readerutils import ReaderUtils
+from cloudwatch.modules.logger.logger import get_logger
 
 
 class CredentialsReader(object):
@@ -23,7 +23,7 @@ class CredentialsReader(object):
     _ACCESS_CONFIG_KEY = "aws_access_key"
     _SECRET_CONFIG_KEY = "aws_secret_key"
 
-    #This is the format the SDK uses.
+    # This is the format the SDK uses.
     _ACCESS_CONFIG_KEY_AWS_FORMAT = "aws_access_key_id"
     _SECRET_CONFIG_KEY_AWS_FORMAT = "aws_secret_access_key"
 
@@ -57,4 +57,3 @@ class CredentialsReader(object):
 
 class CredentialsReaderException(Exception):
     pass
-

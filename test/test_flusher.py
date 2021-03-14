@@ -70,7 +70,7 @@ class FlusherTest(unittest.TestCase):
 
     def test_numerical_value(self):
         key = self.add_value_list("plugin", "plugin_instance_0", "type", "type_instance", "host", [float('nan')])
-        self.assertFalse(key  in self.flusher.metric_map)
+        self.assertFalse(key in self.flusher.metric_map)
         self.assertTrue(key in self.flusher.nan_key_set)
         key = self.add_value_list("plugin", "plugin_instance_1", "type", "type_instance", "host", [10])
         self.assertTrue(key in self.flusher.metric_map)
@@ -231,7 +231,7 @@ class FlusherTest(unittest.TestCase):
     def test_prepare_batches_respects_the_size_limit(self):
         for i in range(self.flusher._MAX_METRICS_PER_PUT_REQUEST + 1):
             self.flusher._aggregate_metric(self._get_vl_mock("plugin" + str(i), "plugin_instance", "type", "type_instance", "host", [i], 0))
-        batch = self.flusher._prepare_batch().next()
+        batch = self.flusher._prepare_batch().__next__()
         self.assertEquals(self.flusher._MAX_METRICS_PER_PUT_REQUEST, len(list(batch)))
         batch = self.flusher._prepare_batch()
         self.assertEquals(1, len(list(batch)))
@@ -257,7 +257,6 @@ class FlusherTest(unittest.TestCase):
         self.assertListEqual([value.type_instance for value in expanded_value_list], ['name1', 'name2'])
         self.assertListEqual([value.values for value in expanded_value_list], [[10], [11]])
 
-
     def test_multivalue_metrics_appends_the_type_instance(self):
         vl1 = self._get_vl_mock("plugin", "plugin_instance", "multivalue_type", "type_instance", "host", [10, 11], 101.1)
         expanded_value_list=self.flusher._expand_value_list(vl1)
@@ -265,14 +264,13 @@ class FlusherTest(unittest.TestCase):
         self.assertListEqual([value.type_instance for value in expanded_value_list], ['type_instance.name1', 'type_instance.name2'])
         self.assertListEqual([value.values for value in expanded_value_list], [[10], [11]])
 
-
     def _assert_statistics(self, metric, min, max, sum, sample_count):
         self.assertEquals(min, metric.statistics.min)
         self.assertEquals(max, metric.statistics.max)
         self.assertEquals(sum, metric.statistics.sum)
         self.assertEquals(sample_count, metric.statistics.sample_count)
         
-    def _get_vl_mock(self, plugin, plugin_instance, type, type_instance, host="MockHost", values=[], timestamp=0):
+    def _get_vl_mock(self, plugin, plugin_instance, type, type_instance, host="MockHost", values=[], timestamp=0.0):
         vl = MagicMock()
         vl.plugin = plugin
         vl.plugin_instance = plugin_instance
@@ -280,7 +278,7 @@ class FlusherTest(unittest.TestCase):
         vl.type_instance = type_instance
         vl.host = host
         vl.values = values
-        vl.time = timestamp;
+        vl.time = timestamp
         return vl
 
     def server_get_received_request(self):

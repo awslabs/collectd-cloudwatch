@@ -4,6 +4,7 @@ from cloudwatch.modules.awscredentials import AWSCredentials
 from cloudwatch.modules.awsutils import get_aws_timestamp
 from cloudwatch.modules.client.signer import Signer
 
+
 class SignerTest(unittest.TestCase):
     
     def setUp(self):
@@ -33,7 +34,7 @@ class SignerTest(unittest.TestCase):
         generated_request = self.signer._build_canonical_request(query_string, canonical_headers, signed_headers, payload)
         self.assertEquals(expected_request, generated_request)
 
-# regression tests
+    # regression tests
     def test_hash(self):
         signer = self.get_regression_signer()
         test_data = "test data string"
@@ -43,13 +44,13 @@ class SignerTest(unittest.TestCase):
     def test_sign(self):
         signer = self.get_regression_signer()
         data = "testing&canonical&request"
-        historical_result = "\xfb\xd2\x86\x87&\xdaC\x03\x98\x9dIC\xcbP?\xa8\\\xfeJ\x82\x03\xe6w\xd4\x963Q\xfd\xe5-\xdb\xcf"
+        historical_result = b"\xfb\xd2\x86\x87&\xdaC\x03\x98\x9dIC\xcbP?\xa8\\\xfeJ\x82\x03\xe6w\xd4\x963Q\xfd\xe5-\xdb\xcf"
         self.assertEquals(historical_result, signer._sign(signer.credentials.secret_key, data))
         
     def test_build_signature_key(self):
         signer = self.get_regression_signer()
         datestamp = "20150725"
-        historical_result = "=7\xa5&\xa3%\xd5Q\x9a\x1ah\xee2mSw<\xdd\xf8\x0e\xde\xdf5\x94\xa6(M`\x00\xd1\x81\xea"
+        historical_result = b"=7\xa5&\xa3%\xd5Q\x9a\x1ah\xee2mSw<\xdd\xf8\x0e\xde\xdf5\x94\xa6(M`\x00\xd1\x81\xea"
         new_result = signer._build_signature_key(signer.credentials.secret_key, datestamp, signer.region, signer.service)
         self.assertEquals(historical_result, new_result)
         
@@ -74,4 +75,4 @@ class SignerTest(unittest.TestCase):
         self.region = "eu-west-1"
         self.service = "monitoring"
         self.algorithm = "AWS4-HMAC-SHA256"
-        return Signer(self.credentials, self.region, self.service, self.algorithm)     
+        return Signer(self.credentials, self.region, self.service, self.algorithm)

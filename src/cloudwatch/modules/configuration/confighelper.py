@@ -1,11 +1,12 @@
 import os
-from ..logger.logger import get_logger
-from configreader import ConfigReader
-from metadatareader import MetadataReader
-from credentialsreader import CredentialsReader
-from whitelist import Whitelist, WhitelistConfigReader
-from ..client.ec2getclient import EC2GetClient
+from cloudwatch.modules.logger.logger import get_logger
+from cloudwatch.modules.configuration.configreader import ConfigReader
+from cloudwatch.modules.configuration.metadatareader import MetadataReader
+from cloudwatch.modules.configuration.credentialsreader import CredentialsReader
+from cloudwatch.modules.configuration.whitelist import Whitelist, WhitelistConfigReader
+from cloudwatch.modules.client.ec2getclient import EC2GetClient
 import traceback
+
 
 class ConfigHelper(object):
     """
@@ -135,12 +136,11 @@ class ConfigHelper(object):
             try:
                 self.host = self.metadata_reader.get_instance_id()
             except Exception as e:
-                ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) +  
-                    " Using host information provided by Collectd.")
+                ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) + " Using host information provided by Collectd.")
 
     def _set_ec2_endpoint(self):
         """ Creates endpoint from region information """
-        if self.region is "localhost":
+        if self.region == "localhost":
             self.ec2_endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com.cn/"

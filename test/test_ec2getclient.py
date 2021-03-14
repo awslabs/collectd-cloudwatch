@@ -38,7 +38,7 @@ class EC2GetClientTest(unittest.TestCase):
         response_timeout = 20
         client = EC2GetClient(self.config_helper, connection_timeout, response_timeout)
         self.assertEquals("http://localhost:57575/", client.endpoint)
-        self.assertEquals((connection_timeout,response_timeout), client.timeout)
+        self.assertEquals((connection_timeout, response_timeout), client.timeout)
     
     def test_initialize_get_client_with_valid_endpoint(self):
         self.config_helper.endpoint = "https://ec2.eu-west-1.amazonaws.com"
@@ -156,10 +156,9 @@ class EC2GetClientTest(unittest.TestCase):
         self.server.serve_forever()
 
     def server_get_received_request(self):
-        return open(FakeServer.REQUEST_FILE).read()[2:] # trim '/?' from the request 
+        return open(FakeServer.REQUEST_FILE).read()[2:]  # trim '/?' from the request
         
     @classmethod
     def tearDownClass(cls):    
         cls.FAKE_SERVER.stop_server()
         cls.FAKE_SERVER = None
-

@@ -1,6 +1,7 @@
-import awsutils as awsutils
-import plugininfo
+import cloudwatch.modules.awsutils as awsutils
+import cloudwatch.modules.plugininfo as plugininfo
 import datetime
+
 
 class MetricDataStatistic(object):
     """
@@ -110,22 +111,22 @@ class MetricDataBuilder(object):
     
     def _build_asg_dimension(self):
         dimensions = {
-              "AutoScalingGroup" : self._get_autoscaling_group(),
-              "PluginInstance" : self._get_plugin_instance_dimension()
+              "AutoScalingGroup": self._get_autoscaling_group(),
+              "PluginInstance": self._get_plugin_instance_dimension()
               }
         return dimensions
 
     def _build_constant_dimension(self):
         dimensions = {
-              "FixedDimension" : self.config.constant_dimension_value,
-              "PluginInstance" : self._get_plugin_instance_dimension()
+              "FixedDimension": self.config.constant_dimension_value,
+              "PluginInstance": self._get_plugin_instance_dimension()
               }
         return dimensions
 
     def _build_metric_dimensions(self):
         dimensions = {
-              "Host" : self._get_host_dimension(),
-              "PluginInstance" : self._get_plugin_instance_dimension()
+              "Host": self._get_host_dimension(),
+              "PluginInstance": self._get_plugin_instance_dimension()
               }
         if self.config.push_asg:
             dimensions["AutoScalingGroup"] = self._get_autoscaling_group()

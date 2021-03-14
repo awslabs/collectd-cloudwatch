@@ -3,6 +3,7 @@ import requests
 
 from helpers.fake_http_server import FakeServer
 
+
 class FakeServerTest(unittest.TestCase):
 
     SERVER = None
@@ -62,7 +63,8 @@ class FakeServerTest(unittest.TestCase):
             cls.SERVER.stop_server()
         except:
             pass
-    
+
+
 def send_and_check_request(url, request):
     url = url + request
     response = requests.get(url)

@@ -4,6 +4,7 @@ from time import sleep
 from cloudwatch.modules.metricdata import MetricDataStatistic
 import cloudwatch.modules.awsutils as awsutils
 
+
 class MetricDataTest(unittest.TestCase):
     
     def test_metric_data_default_constructor(self):
@@ -18,14 +19,14 @@ class MetricDataTest(unittest.TestCase):
         new_dimensions = {'Host':'InstanceID'}
         new_namespace = "test_namespace"
         metric = MetricDataStatistic(metric_name=new_metric_name, timestamp=new_timestamp,
-                            unit=new_unit, dimensions=new_dimensions, namespace=new_namespace)
+                                     unit=new_unit, dimensions=new_dimensions, namespace=new_namespace)
         assert_metric_data(metric, new_metric_name, new_timestamp, new_unit,
                            new_dimensions, namespace=new_namespace)
         
     def test_empty_metric_object(self):
         metric = MetricDataStatistic()
         assert_metric_data(metric, metric_name="", unit="", dimensions={}, statistics=None, 
-                 timestamp=None, namespace=MetricDataStatistic.NAMESPACE)
+                           timestamp=None, namespace=MetricDataStatistic.NAMESPACE)
         
     def test_metric_object_with_statistic_data(self):
         new_statistics = MetricDataStatistic.Statistics(10)
@@ -82,6 +83,7 @@ class MetricDataTest(unittest.TestCase):
         metric2 = MetricDataStatistic("metric_name", 20, timestamp=timestamp)
         self.assertTrue(metric1.timestamp is metric2.timestamp)
 
+
 def assert_metric_data(metric_data, metric_name='', timestamp=None, unit="", dimensions={}, statistics=None, namespace=MetricDataStatistic.NAMESPACE):
     assert namespace == metric_data.namespace
     assert metric_name == metric_data.metric_name
@@ -89,10 +91,11 @@ def assert_metric_data(metric_data, metric_name='', timestamp=None, unit="", dim
     assert dimensions == metric_data.dimensions
     assert statistics == metric_data.statistics
     if timestamp is None:
-        assert metric_data.timestamp #Make sure that timestamp is not empty
+        assert metric_data.timestamp  # Make sure that timestamp is not empty
     else:
         assert timestamp == metric_data.timestamp
-    
+
+
 def assert_statistics(statistics, min=None, max=None, sum=None, sample_count=1):
     assert min == statistics.min
     assert max == statistics.max

@@ -1,14 +1,14 @@
 import re
 import os
 
-from ..logger.logger import get_logger
+from cloudwatch.modules.logger.logger import get_logger
 
 
 class ReaderUtils(object):
     
     _LOGGER = get_logger(__name__)
     _COMMENT_CHARACTER = '#'
-    _AWS_PROFILE_PATTERN = re.compile("^\s*\[[\w]+\]\s*$")
+    _AWS_PROFILE_PATTERN = re.compile(r"^\s*\[[\w]+\]\s*$")
     
     def __init__(self, path):
         self.path = path

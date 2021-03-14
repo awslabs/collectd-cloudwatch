@@ -168,10 +168,9 @@ class PutClientTest(unittest.TestCase):
         self.server.serve_forever()
 
     def server_get_received_request(self):
-        return open(FakeServer.REQUEST_FILE).read()[2:] # trim '/?' from the request 
+        return open(FakeServer.REQUEST_FILE).read()[2:]  # trim '/?' from the request
         
     @classmethod
     def tearDownClass(cls):    
         cls.FAKE_SERVER.stop_server()
         cls.FAKE_SERVER = None
-

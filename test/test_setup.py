@@ -5,7 +5,7 @@ from os import path, remove, rmdir
 
 from mock import patch, Mock
 
-import resources.collectd_outputs as resources
+from resources import collectd_outputs as resources
 import src.setup as installer
 from helpers.output_catcher import output_catcher
 from src.setup import Command, get_collectd_info, CollectdInfo
@@ -70,7 +70,7 @@ class CommandTest(unittest.TestCase):
             command = Command("echo test", self.TEST_MSG)
             command.run()
             output = out.getvalue().strip()
-            self.assertEquals(self.TEST_MSG + " " + command.OK, output)
+            self.assertEquals(self.TEST_MSG + "\n" + command.OK, output)
             self.assertEquals("test", command.stdout)
             self.assertTrue(command.was_successful)
 
@@ -79,7 +79,7 @@ class CommandTest(unittest.TestCase):
             command = Command("which " + self.INVALID_COMMAND, self.TEST_MSG)
             command.run()
             output = out.getvalue().strip()
-            self.assertEquals(self.TEST_MSG + " " + command.NOT_OK, output)
+            self.assertEquals(self.TEST_MSG + "\n" + command.NOT_OK, output)
             self.assertFalse(command.was_successful)
 
     def test_output_of_invalid_command(self):
@@ -127,6 +127,7 @@ class ColorTest(unittest.TestCase):
         self.assertEquals(installer.Color.YELLOW + test_string + self.END, installer.Color.yellow(test_string))
         self.assertEquals(installer.Color.CYAN + test_string + self.END, installer.Color.cyan(test_string))
 
+
 class NonInteractiveTests(unittest.TestCase):
     plugin_config = installer.PluginConfig
     metadata_reader = None
@@ -149,7 +150,6 @@ class NonInteractiveTests(unittest.TestCase):
 
     tmp = tempfile.mkdtemp(prefix='/tmp/')
     creds_path = tmp + '/' + 'test_creds_file'
-
 
     def test_params(self):
         non_interactive_installer = installer.InteractiveConfigurator(self.plugin_config, self.metadata_reader,

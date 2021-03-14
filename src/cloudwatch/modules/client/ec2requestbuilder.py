@@ -1,4 +1,4 @@
-from baserequestbuilder import BaseRequestBuilder
+from cloudwatch.modules.client.baserequestbuilder import BaseRequestBuilder
 
 
 class EC2RequestBuilder(BaseRequestBuilder):

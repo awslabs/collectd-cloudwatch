@@ -1,11 +1,12 @@
-import BaseHTTPServer
+import http.server as BaseHTTPServer
 import json
 import os.path
 import socket
 import threading
 import time
-import urllib2
-from SimpleHTTPServer import SimpleHTTPRequestHandler
+import urllib.request
+import urllib.error
+from http.server import SimpleHTTPRequestHandler
 
 
 class FakeServer(object):
@@ -73,7 +74,7 @@ class FakeServer(object):
             self.send_header("Content-type", response_type)
             self.send_header("Content-length", str(len(self._response)))
             self.end_headers()
-            self.wfile.write(self._response)
+            self.wfile.write(self._response.encode("utf-8"))
 
         def _update_response(self):
             self._response = self.read_file_or_default_to(FakeServer.RESPONSE_FILE, FakeServer.DEFAULT_RESPONSE)
@@ -103,7 +104,7 @@ class FakeServer(object):
                 self._httpd.shutdown()
                 self._serve_in_loop = False
             elif self._ready_to_serve:
-                urllib2.urlopen(self.get_url()).read()  # generate empty request required to close listener
+                urllib.request.urlopen(self.get_url()).read()  # generate empty request required to close listener
             self._ready_to_serve = False
             self._httpd.server_close() 
             self._server_started = False
@@ -175,4 +176,4 @@ class FakeServer(object):
             os.remove(FakeServer.RESPONSE_CODE_FILE)
             os.remove(FakeServer.REQUEST_FILE)
         except:
-            pass # Don't raise exceptions if cannot delete files
+            pass  # Don't raise exceptions if cannot delete files

@@ -10,4 +10,4 @@ def get_aws_timestamp():
 
 
 def get_datestamp():
-    return datetime.utcnow().strftime('%Y%m%d') 
+    return datetime.utcnow().strftime('%Y%m%d')

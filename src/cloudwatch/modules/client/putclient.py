@@ -1,9 +1,9 @@
 import re
 import os
 
-from ..plugininfo import PLUGIN_NAME, PLUGIN_VERSION
-from requestbuilder import RequestBuilder
-from ..logger.logger import get_logger
+from cloudwatch.modules.plugininfo import PLUGIN_NAME, PLUGIN_VERSION
+from cloudwatch.modules.client.requestbuilder import RequestBuilder
+from cloudwatch.modules.logger.logger import get_logger
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 from tempfile import gettempdir
@@ -54,7 +54,7 @@ class PutClient(object):
         self.session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
 
     def _validate_and_set_endpoint(self, endpoint):
-        pattern = re.compile("http[s]?://*/")
+        pattern = re.compile(r"http[s]?://*/")
         if pattern.match(endpoint) or "localhost" in endpoint: 
             self.endpoint = endpoint    
         else:

@@ -1,8 +1,8 @@
 from json import loads
 from requests import Session, codes
 from requests.adapters import HTTPAdapter
-from ..logger.logger import get_logger
-from ..awscredentials import AWSCredentials
+from cloudwatch.modules.logger.logger import get_logger
+from cloudwatch.modules.awscredentials import AWSCredentials
 
 
 
@@ -74,7 +74,7 @@ class MetadataReader(object):
         if result.status_code is codes.ok:
             return str(result.text)
         else:
-            self._LOGGER.error("The request: '" + str(request) + "' failed with status code: '" + str(result.status_code) + "' and message: '" + str(result.text) +"'.")
+            self._LOGGER.error("The request: '" + str(request) + "' failed with status code: '" + str(result.status_code) + "' and message: '" + str(result.text) + "'.")
             raise MetadataRequestException("Cannot retrieve configuration from metadata service. Status code: " + str(result.status_code))
 
     def _v1_call(self, request):

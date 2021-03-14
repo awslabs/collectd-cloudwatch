@@ -1,6 +1,7 @@
-from ..awsutils import get_aws_timestamp, get_datestamp
-from signer import Signer
-from querystringbuilder import QuerystringBuilder
+from cloudwatch.modules.awsutils import get_aws_timestamp, get_datestamp
+from cloudwatch.modules.client.signer import Signer
+from cloudwatch.modules.client.querystringbuilder import QuerystringBuilder
+
 
 class BaseRequestBuilder(object):
     """

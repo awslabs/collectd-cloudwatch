@@ -2,6 +2,7 @@ import unittest
 
 import cloudwatch.modules.collectd as collectd
 
+
 class collectdTest(unittest.TestCase):
         
     def test_stub_logging_methods_are_not_throwing_exceptions(self):

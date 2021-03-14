@@ -1,10 +1,10 @@
 import re
 from os import path
-from string import strip
 from threading import Lock
+import sys
 
-from configreader import ConfigReader
-from ..logger.logger import get_logger
+from cloudwatch.modules.configuration.configreader import ConfigReader
+from cloudwatch.modules.logger.logger import get_logger
 
 
 class WhitelistConfigReader(object):
@@ -19,7 +19,7 @@ class WhitelistConfigReader(object):
     END_STRING = "$"
     EMPTY_REGEX = START_STRING + END_STRING
 
-    PASS_THROUGH_REGEX_STRING = "^\.[\*\+]?\s.*$|^.*?\s\.[\*\+]|^\.[\*\+]$"  # matches single .*, .+ strings
+    PASS_THROUGH_REGEX_STRING = r"^\.[\*\+]?\s.*$|^.*?\s\.[\*\+]|^\.[\*\+]$"  # matches single .*, .+ strings
     # as well as  strings with .* or .+ preceded or followed by whitespace.
 
     def __init__(self, whitelist_config_path, pass_through_allowed):
@@ -43,7 +43,7 @@ class WhitelistConfigReader(object):
 
     def _get_whitelisted_names_from_file(self, whitelist_path):
         with open(whitelist_path) as whitelist_file:
-            return self._filter_valid_regexes(map(strip, whitelist_file))
+            return self._filter_valid_regexes(map(str.strip, whitelist_file))
 
     def _create_whitelist_file(self, whitelist_path):
         if not path.exists(whitelist_path):
@@ -63,7 +63,8 @@ class WhitelistConfigReader(object):
                 return True
             return False
         except Exception as e:
-            self._LOGGER.warning("The whitelist rule: '{}' is invalid, reason: {}".format(str(regex_string), str(e.message)))
+            _traceback = sys.exc_info()[2]
+            self._LOGGER.warning("The whitelist rule: '{}' is invalid, reason: {}".format(str(regex_string), str(e.with_traceback(_traceback).msg)))
             return False
 
     def _is_allowed_regex(self, regex_string):
@@ -138,6 +139,3 @@ class Whitelist(object):
                 self._allowed_metrics[metric_key] = False
                 self.blocked_metric_log.log_metric(metric_key)
         return self._allowed_metrics[metric_key]
-
-
-

@@ -44,18 +44,18 @@ PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudw
 PLUGIN_CONFIGURATION_INCLUDE_LINE = 'Include "/etc/collectd-cloudwatch.conf"\r\n'
 APT_INSTALL_COMMAND = "apt-get install -y "
 YUM_INSTALL_COMMAND = "yum install -y "
-SYSTEM_DEPENDENCIES = ["python-pip", "python-setuptools"]
+SYSTEM_DEPENDENCIES = ["python3-pip", "python3-setuptools", "python3-requests", "curl"]
 PIP_INSTALLATION_FLAGS = " install --quiet --upgrade --force-reinstall "
 EASY_INSTALL_COMMAND = "easy_install -U --quiet "
 PYTHON_DEPENDENCIES = ["requests"]
 FIND_COMMAND = "which {} 2> /dev/null"
 COLLECTD_HELP_ARGS = "-help"
-CONFIG_FILE_REGEX = re.compile("\sConfig file\s*(.*)\s")
-VERSION_REGEX = re.compile("\scollectd ([\d*].*[\d*]).*\s")
-DISTRO_NAME_REGEX = re.compile("(?<!...)NAME=\"?([\w\s]*)\"?\s?")
-CLOUD_WATCH_COLLECTD_DETECTION_REGEX = re.compile('^Import [\'\"]cloudwatch_writer[\"\']$|collectd-cloudwatch\.conf', re.MULTILINE | re.IGNORECASE)
-COLLECTD_CONFIG_INCLUDE_REGEX = re.compile("^Include [\'\"](.*?\.conf)[\'\"]", re.MULTILINE | re.IGNORECASE)
-COLLECTD_PYTHON_PLUGIN_CONFIGURATION_REGEX = re.compile("^LoadPlugin python$|^<LoadPlugin python>$", re.MULTILINE | re.IGNORECASE)
+CONFIG_FILE_REGEX = re.compile(r"\sConfig file\s*(.*)\s")
+VERSION_REGEX = re.compile(r"\scollectd ([\d*].*[\d*]).*\s")
+DISTRO_NAME_REGEX = re.compile(r"(?<!...)NAME=\"?([\w\s]*)\"?\s?")
+CLOUD_WATCH_COLLECTD_DETECTION_REGEX = re.compile(r'^Import [\'\"]cloudwatch_writer[\"\']$|collectd-cloudwatch\.conf', re.MULTILINE | re.IGNORECASE)
+COLLECTD_CONFIG_INCLUDE_REGEX = re.compile(r"^Include [\'\"](.*?\.conf)[\'\"]", re.MULTILINE | re.IGNORECASE)
+COLLECTD_PYTHON_PLUGIN_CONFIGURATION_REGEX = re.compile(r"^LoadPlugin python$|^<LoadPlugin python>$", re.MULTILINE | re.IGNORECASE)
 
 logging.basicConfig()
 logger = logging.getLogger()
@@ -122,6 +122,9 @@ class Color(object):
 def get_collectd_info():
     exec_path = _get_collectd_exec()
     output = check_output([exec_path, COLLECTD_HELP_ARGS])
+    # change type of `output` to str
+    if type(output) is bytes:
+        output = output.decode("utf-8")
     version = VERSION_REGEX.search(output).group(1)
     config_path = CONFIG_FILE_REGEX.search(output).group(1)
     return CollectdInfo(exec_path, config_path, version)
@@ -137,7 +140,10 @@ def _get_collectd_exec():
 
 
 def get_path_to_executable(command):
-    return check_output(FIND_COMMAND.format(command), shell=True).strip()
+    _path = check_output(FIND_COMMAND.format(command), shell=True).strip()
+    if type(_path) is bytes:
+        _path = _path.decode("utf-8")
+    return _path
 
 
 class Command(object):
@@ -162,7 +168,7 @@ class Command(object):
         return self._process and self._process.returncode is self.SUCCESS
 
     def run(self):
-        print self.message,  # comma stops print from adding line break at the end
+        print(self.message,)  # comma stops print from adding line break at the end
         try:
             self._process = self._get_process()
             self._capture_outputs()
@@ -181,14 +187,14 @@ class Command(object):
 
     def _capture_outputs(self):
         stdout, stderr = self._process.communicate()
-        self.stdout = str(stdout).strip()
-        self.stderr = str(stderr).strip()
+        self.stdout = stdout.decode("utf-8").strip()
+        self.stderr = stderr.decode("utf-8").strip()
 
     def _output_command_status(self):
         result = self.NOT_OK
         if self.was_successful:
             result = self.OK
-        print result
+        print(result)
 
 
 class MetadataReader(object):
@@ -295,14 +301,14 @@ class MetadataRequestException(Exception):
 
 def install_python_packages(packages):
     try:
-        Command(detect_pip() + PIP_INSTALLATION_FLAGS + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
+        Command("{}{}{}".format(detect_pip(), PIP_INSTALLATION_FLAGS, " ".join(packages)), "Installing python dependencies", exit_on_failure=True).run()
     except CalledProcessError:
         Command(EASY_INSTALL_COMMAND + " ".join(packages), "Installing python dependencies", exit_on_failure=True).run()
 
 
 def detect_pip():
     try:
-        return get_path_to_executable("pip")
+        return get_path_to_executable("pip3")
     except CalledProcessError:
         return get_path_to_executable("python-pip")
 
@@ -564,9 +570,9 @@ class InteractiveConfigurator(object):
     def _configure_credentials_non_interactive(self):
         if self.access_key and self.secret_key:
             self.config.credentials_path = self._get_credentials_path()
-            print "self.config.credentials_path = ", self.config.credentials_path
+            print("self.config.credentials_path = ", self.config.credentials_path)
         self.config.credentials_file_exist = path.exists(str(self.config.credentials_path))
-        print "self.config.credentials_file_exist = ", self.config.credentials_file_exist
+        print("self.config.credentials_file_exist = ", self.config.credentials_file_exist)
         if not self.config.credentials_file_exist:
             self.config.access_key = self.access_key
             self.config.secret_key = self.secret_key
@@ -674,16 +680,16 @@ class Prompt(object):
 
     def run(self):
         if self.title:
-            print self.title
+            print(self.title)
         if self.options:
             for index, option in enumerate(self.options, start=1):
-                print "  {}. {}".format(index, option)
+                print("  {}. {}".format(index, option))
         return self._get_answer()
 
     def _get_answer(self):
-        value = raw_input(self.message).strip()
+        value = input(self.message).strip()
         while self._is_value_invalid(value):
-            value = raw_input(self.message).strip()
+            value = input(self.message).strip()
         return value or str(self.default)
 
     def _is_value_invalid(self, value):
@@ -796,7 +802,7 @@ def main():
     COPY_PLUGIN_INCLUDE_FILE_CMD = CMD(COPY_CMD.format(source=PLUGIN_INCLUDE_CONFIGURATION, target="/etc/"), "Copying CloudWatch plugin include file")
     COPY_RECOMMENDED_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_COLLECTD_CONFIGURATION, target=COLLECTD_INFO.config_path), "Replacing collectd configuration")
     BACKUP_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=COLLECTD_INFO.config_path, target=COLLECTD_INFO.config_path + "." + time.strftime(TIMESTAMP_FORMAT)),
-                                 "Creating backup of the original configuration")
+                                     "Creating backup of the original configuration")
     REPLACE_WHITELIST_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_WHITELIST, target=DEFAULT_PLUGIN_CONFIGURATION_DIR), "Replacing whitelist configuration")
 
     parser = argparse.ArgumentParser(
@@ -945,7 +951,7 @@ def main():
             elif config.only_add_plugin:
                 _inject_plugin_configuration()
             else:
-                print Color.yellow("Please find instructions for the manual configuration of the plugin in the readme.md file.")
+                print(Color.yellow("Please find instructions for the manual configuration of the plugin in the readme.md file."))
         else:
             raise InstallationFailedException("The minimum supported version of collectd is " + CollectdInfo.MIN_SUPPORTED_VERSION + \
                                               ", and your version is " + COLLECTD_INFO.version + \
@@ -964,13 +970,13 @@ def main():
 
     def _inject_plugin_configuration():
         if _is_cloudwatch_plugin_configured():
-            print Color.yellow("CloudWatch collectd plugin is already configured in the existing collectd.conf file.")
+            print(Color.yellow("CloudWatch collectd plugin is already configured in the existing collectd.conf file."))
         elif _can_safely_add_python_plugin():
             with open(COLLECTD_INFO.config_path, "a") as config:
                 config.write(PLUGIN_CONFIGURATION_INCLUDE_LINE)
         else:
-            print Color.yellow("Cannot add CloudWatch collectd plugin automatically to the existing collectd configuration.\n"
-                               "Plugin must be configured manually, please find instructions in readme.md file.")
+            print(Color.yellow("Cannot add CloudWatch collectd plugin automatically to the existing collectd configuration.\n"
+                               "Plugin must be configured manually, please find instructions in readme.md file."))
 
     def _copy_recommended_configs():
         _run_command(BACKUP_COLLECTD_CONFIG_CMD)

@@ -4,7 +4,8 @@ from cloudwatch.modules.awscredentials import AWSCredentials
 from cloudwatch.modules.awsutils import get_datestamp
 from cloudwatch.modules.client.requestbuilder import RequestBuilder
 from cloudwatch.modules.metricdata import MetricDataStatistic
-from cloudwatch.modules.client.querystringbuilder import QuerystringBuilder#
+from cloudwatch.modules.client.querystringbuilder import QuerystringBuilder
+
 
 class RequestBuilderTest(unittest.TestCase):
     
@@ -15,7 +16,7 @@ class RequestBuilderTest(unittest.TestCase):
         self.builder = RequestBuilder(self.credentials, self.region, "10")
         
     def test_get_host(self):
-        self.assertEquals("monitoring." + self.region +".amazonaws.com", self.builder._get_host())
+        self.assertEquals("monitoring." + self.region + ".amazonaws.com", self.builder._get_host())
     
     def test_get_host_for_localhost_region(self):
         self.builder.region = "localhost"
@@ -27,14 +28,14 @@ class RequestBuilderTest(unittest.TestCase):
     def test_get_canonical_headers(self):
         headers = self.builder._get_canonical_headers()
         self.assertTrue("\n" in headers)
-        self.assertTrue("host:monitoring." + self.region +".amazonaws.com\n" in headers)
+        self.assertTrue("host:monitoring." + self.region + ".amazonaws.com\n" in headers)
         
     def test_get_credential_scope(self):
         datestamp = get_datestamp()
         v4_terminator = "aws4_request"
         service = "monitoring"
         self.builder.create_signed_request(self.namespace, [])
-        self.assertEquals(datestamp + "/" + self.region + "/" + service + "/" + v4_terminator, \
+        self.assertEquals(datestamp + "/" + self.region + "/" + service + "/" + v4_terminator,
                           self.builder._get_credential_scope())
     
     def test_get_credential_scope_before_geting_request(self):

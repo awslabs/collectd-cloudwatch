@@ -4,6 +4,7 @@ from helpers.fake_http_server import FakeServer
 from helpers.fake_metadata import FAKE_REGION, FAKE_IDENTITY_DOCUMENT_STRING
 from cloudwatch.modules.configuration.metadatareader import MetadataReader, MetadataRequestException
 
+
 class MetadataReaderTest(unittest.TestCase):
     FAKE_SERVER = None
     MINIMUM_NUMBER_OF_RETRIES = 3
@@ -28,7 +29,7 @@ class MetadataReaderTest(unittest.TestCase):
     def test_get_region_from_metadata(self):
         self.server.set_expected_response(FAKE_IDENTITY_DOCUMENT_STRING, 200)
         self.assertEquals(FAKE_REGION, self.metadata_reader.get_region())
-    
+
     def test_get_full_configuration_from_config_file(self):
         self.server.set_expected_response("invalid request", 404)
         with self.assertRaises(MetadataRequestException):

@@ -5,6 +5,7 @@ from helpers.fake_http_server import FakeServer
 from cloudwatch.modules.configuration.confighelper import ConfigHelper
 from cloudwatch.modules.metricdata import MetricDataBuilder
 
+
 class MetricDataBuilderTest(unittest.TestCase):
 
     FAKE_SERVER = None
@@ -105,7 +106,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.assertEquals("CPU.CPU.Steal", metric[0].metric_name)
         self.assertEquals("valid_host", metric[0].dimensions['Host'])
         self.assertEquals("0", metric[0].dimensions['PluginInstance'])
-        self.assertEquals("19700101T000240Z", metric[0].timestamp);
+        self.assertEquals("19700101T000240Z", metric[0].timestamp)
     
     def test_build_metric_name_with_all_name_parts(self):
         vl = self._get_vl_mock("CPU", "0", "CPU", "Steal")
@@ -149,7 +150,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         dimensions = metric_data_builder._build_metric_dimensions()
         self.assertEquals("MockHost", dimensions['Host'])
         
-    def _get_vl_mock(self, plugin, plugin_instance, type, type_instance, host="MockHost", values=[], timestamp=0):
+    def _get_vl_mock(self, plugin, plugin_instance, type, type_instance, host="MockHost", values=[], timestamp=0.0):
         vl = MagicMock()
         vl.plugin = plugin
         vl.plugin_instance = plugin_instance
