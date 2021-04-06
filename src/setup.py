@@ -13,6 +13,7 @@ Depending on the version of collectd installed on the host we provide the follow
 """
 
 import os
+import sys
 import platform
 import re
 import shlex
@@ -44,7 +45,6 @@ PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudw
 PLUGIN_CONFIGURATION_INCLUDE_LINE = 'Include "/etc/collectd-cloudwatch.conf"\r\n'
 APT_INSTALL_COMMAND = "apt-get install -y "
 YUM_INSTALL_COMMAND = "yum install -y "
-SYSTEM_DEPENDENCIES = ["python-pip", "python-setuptools"]
 PIP_INSTALLATION_FLAGS = " install --quiet --upgrade --force-reinstall "
 EASY_INSTALL_COMMAND = "easy_install -U --quiet "
 PYTHON_DEPENDENCIES = ["requests"]
@@ -69,6 +69,21 @@ DISTRIBUTION_TO_INSTALLER = {
     "CentOS Linux": YUM_INSTALL_COMMAND,
 }
 
+def is_pip_installed():
+    try:
+        get_path_to_executable("pip")
+    except CalledProcessError:
+        return False
+    else:
+        return True
+
+def is_setupTools_installed():
+    try:
+        import setuptools
+    except ImportError:
+        return False
+    else:
+        return True
 
 class InstallationFailedException(Exception):
     pass
@@ -916,7 +931,11 @@ def main():
 
     def install_plugin():
         try:
-            install_packages(SYSTEM_DEPENDENCIES)
+            # "python-pip", "python-setuptools" will pull in the python2.6 runtime 
+            # Since python with version >= 2.7 should install pip and setuptools by default, we 
+            # can ignore the system dependencies
+            if not ( is_pip_installed() and is_setupTools_installed() ):
+                install_packages(["python-pip", "python-setuptools"])
             install_python_packages(PYTHON_DEPENDENCIES)
             create_directory_structure()
             chdir(TEMP_DIRECTORY)
