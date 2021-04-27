@@ -11,6 +11,7 @@ class MetricDataBuilderTest(unittest.TestCase):
     CONFIG_DIR = "./test/config_files/"
     VALID_CONFIG_FULL = CONFIG_DIR + "valid_config_full"
     VALID_CONFIG_WITH_CREDS_AND_REGION = CONFIG_DIR + "valid_config_with_creds_and_region"
+    DIMENSION_CONFIG = CONFIG_DIR + "dimensions.conf"
     
     @classmethod
     def setUpClass(cls):
@@ -31,6 +32,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         vl = self._get_vl_mock("CPU", "0", "CPU", "Steal")
         self.config_helper.push_asg = False
         self.config_helper.push_constant = False
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         metric = MetricDataBuilder(self.config_helper, vl).build()
         self.assertEquals(None, metric[0].statistics)
         self.assertEquals("CPU.CPU.Steal", metric[0].metric_name)
@@ -43,6 +45,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.config_helper.push_asg = True
         self.config_helper.push_constant = False
         self.config_helper.asg_name = "MyASG"
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         metric = MetricDataBuilder(self.config_helper, vl).build()
         self.assertEquals(None, metric[0].statistics)
         self.assertEquals("CPU.CPU.Steal", metric[0].metric_name)
@@ -59,6 +62,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.config_helper.push_asg = False
         self.config_helper.push_constant = True
         self.config_helper.constant_dimension_value = "somevalue"
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         metric = MetricDataBuilder(self.config_helper, vl).build()
         self.assertEquals(None, metric[0].statistics)
         self.assertEquals("CPU.CPU.Steal", metric[0].metric_name)
@@ -76,6 +80,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.config_helper.asg_name = "MyASG"
         self.config_helper.push_constant = True
         self.config_helper.constant_dimension_value = "somevalue"
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         metric = MetricDataBuilder(self.config_helper, vl).build()
         self.assertEquals(None, metric[0].statistics)
         self.assertEquals("CPU.CPU.Steal", metric[0].metric_name)
@@ -99,6 +104,7 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.config_helper.host = "valid_host"
         self.config_helper.region = "localhost"
         self.config_helper.enable_high_resolution_metrics = True
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         vl = self._get_vl_mock("CPU", "0", "CPU", "Steal", 112.1)
         metric = MetricDataBuilder(self.config_helper, vl, 160.1).build()
         self.assertEquals(None, metric[0].statistics)
@@ -129,13 +135,31 @@ class MetricDataBuilderTest(unittest.TestCase):
         self.assertEquals(expected_name, generated_name)
     
     def test_build_metric_dimensions(self):
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         vl = self._get_vl_mock("aggregation", "cpu-average", "cpu", "idle")
         metric_data_builder = MetricDataBuilder(self.config_helper, vl)
         dimensions = metric_data_builder._build_metric_dimensions()
         self.assertEquals("cpu-average", dimensions['PluginInstance'])
         self.assertEquals("valid_host", dimensions['Host'])
 
-    def test_buoild_metric_dimensions_with_no_plugin_instance(self):
+    def test_build_metric_flex_dimensions(self):
+        self.config_helper.DIMENSION_CONFIG_PATH = self.DIMENSION_CONFIG
+        vl = self._get_vl_mock("aggregation", "cpu-average", "cpu", "idle")
+        metric_data_builder = MetricDataBuilder(self.config_helper, vl)
+        dimensions = metric_data_builder._build_metric_dimensions()
+        self.assertEquals("cpu-average", dimensions['PluginInstance'])
+        self.assertEquals("valid_host", dimensions['InstanceId'])
+
+    def test_build_metric_flex_dimensions_without_plugin_instance(self):
+        self.config_helper.DIMENSION_CONFIG_PATH = self.DIMENSION_CONFIG
+        vl = self._get_vl_mock("aggregation", "", "cpu", "idle")
+        metric_data_builder = MetricDataBuilder(self.config_helper, vl)
+        dimensions = metric_data_builder._build_metric_dimensions()
+        self.assertEquals("NONE", dimensions['PluginInstance'])
+        self.assertEquals("valid_host", dimensions['InstanceId'])
+
+    def test_build_metric_dimensions_with_no_plugin_instance(self):
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         vl = self._get_vl_mock("plugin", "", "type", "")
         metric_data_builder = MetricDataBuilder(self.config_helper, vl)
         dimensions = metric_data_builder._build_metric_dimensions()
@@ -144,6 +168,7 @@ class MetricDataBuilderTest(unittest.TestCase):
     def test_build_metric_dimensions_with_host_from_value_list(self):
         self.server.set_expected_response("Error", 404)
         self.config_helper.host = ""
+        self.config_helper.DIMENSION_CONFIG_PATH = None
         vl = self._get_vl_mock("aggregation", "cpu-average", "cpu", "idle")
         metric_data_builder = MetricDataBuilder(self.config_helper, vl)
         dimensions = metric_data_builder._build_metric_dimensions()

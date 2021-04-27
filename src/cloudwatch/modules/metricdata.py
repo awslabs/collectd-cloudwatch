@@ -1,6 +1,8 @@
 import awsutils as awsutils
 import plugininfo
 import datetime
+from logger.logger import get_logger
+from dimensionhandler import Dimensions
 
 class MetricDataStatistic(object):
     """
@@ -86,11 +88,11 @@ class MetricDataBuilder(object):
 
     def build(self):
         """ Builds metric data object with name and dimensions but without value or statistics """
-        metric_array = [MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions(), timestamp=self._build_timestamp())]
+        metric_array = [MetricDataStatistic(metric_name=self._build_metric_name(), unit=self.vl.type_instance, dimensions=self._build_metric_dimensions(), timestamp=self._build_timestamp())]
         if self.config.push_asg:
-            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_asg_dimension(), timestamp=self._build_timestamp()))
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), unit=self.vl.type_instance, dimensions=self._build_asg_dimension(), timestamp=self._build_timestamp()))
         if self.config.push_constant:
-            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), unit=self.vl.type_instance, dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
         return metric_array
         
     def _build_timestamp(self):
@@ -123,10 +125,14 @@ class MetricDataBuilder(object):
         return dimensions
 
     def _build_metric_dimensions(self):
-        dimensions = {
-              "Host" : self._get_host_dimension(),
-              "PluginInstance" : self._get_plugin_instance_dimension()
-              }
+        if self.config.DIMENSION_CONFIG_PATH != None:
+            d = Dimensions(self.config, self.vl)
+            dimensions = d.get_dimensions()
+        else:
+            dimensions = {
+                "Host" : self._get_host_dimension(),
+                "PluginInstance" : self._get_plugin_instance_dimension()
+            }
         if self.config.push_asg:
             dimensions["AutoScalingGroup"] = self._get_autoscaling_group()
         if self.config.push_constant:
@@ -147,3 +153,4 @@ class MetricDataBuilder(object):
         if self.config.asg_name:
             return self.config.asg_name
         return "NONE"
+

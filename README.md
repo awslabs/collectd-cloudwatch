@@ -102,6 +102,20 @@ df-.*-percent_bytes-used
 1. The df.percent_bytes.used metric will be published for every file system reported by df plugin
 
 
+### Flexible Dimension
+
+This feature will give the user the capability to report metrics with any customized dimensions.
+
+Basically, there is a flexible filled up dimension dictionary has been filled up every time while get_dimensions function is called. 
+
+To expand this feature, the developer needs to:
+1. Implement your own dimension class deriving from DimensionsPlugin. A callback func and args should be filled out correctly in register_plugin function. The callback function is used to fill out the dimension dictionary.
+2. Initialize and register your dimension in dimensionhandler.py
+
+To use this feature, the user can just add the dimension name into the dimension.conf file. One dimenion per line. The dimension name must match the name in the dimension plugin implementation. If you don't want to include certain dimension, you can just not include it in the configuration file.
+
+The default implemented dimensions are: InstanceId, PluginInstance
+
 ## Usage
 Once the plugin is configured correctly, restart collectd to load new configuration.
 ```
