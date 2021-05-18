@@ -33,6 +33,7 @@ class ConfigReader(object):
     DEBUG_CONFIG_KEY = "debug"
     PASS_THROUGH_CONFIG_KEY = "whitelist_pass_through"
     PUSH_ASG_KEY = "push_asg"
+    DIMENSIONS_PATH_KEY = "dimensions_path"
     PUSH_CONSTANT_KEY = "push_constant"
     CONSTANT_DIMENSION_KEY = "constant_dimension_value"
     PROXY_SERVER_NAME_KEY = "proxy_server_name"
@@ -48,6 +49,7 @@ class ConfigReader(object):
         self.pass_through = self._PASS_THROUGH_DEFAULT_VALUE
         self.debug = self._DEBUG_DEFAULT_VALUE
         self.push_asg = self._PUSH_ASG_DEFAULT_VALUE
+        self.dimensions_path = ""
         self.push_constant = self._PUSH_CONSTANT_DEFAULT_VALUE
         self.constant_dimension_value = ''
         self.proxy_server_name=''
@@ -76,5 +78,6 @@ class ConfigReader(object):
         self.pass_through = self.reader_utils.try_get_boolean(self.PASS_THROUGH_CONFIG_KEY, self._PASS_THROUGH_DEFAULT_VALUE)
         self.debug = self.reader_utils.try_get_boolean(self.DEBUG_CONFIG_KEY, self._DEBUG_DEFAULT_VALUE)
         self.push_asg = self.reader_utils.try_get_boolean(self.PUSH_ASG_KEY, self._PUSH_ASG_DEFAULT_VALUE)
+        self.dimensions_path = self.reader_utils.get_string(self.DIMENSIONS_PATH_KEY)
         self.push_constant = self.reader_utils.try_get_boolean(self.PUSH_CONSTANT_KEY, self._PUSH_CONSTANT_DEFAULT_VALUE)
         self.constant_dimension_value = self.reader_utils.get_string(self.CONSTANT_DIMENSION_KEY)

@@ -1,6 +1,9 @@
 import awsutils as awsutils
 import plugininfo
 import datetime
+import json 
+import urllib2
+from logger.logger import get_logger
 
 class MetricDataStatistic(object):
     """
@@ -78,6 +81,7 @@ class MetricDataBuilder(object):
     vl -- The Collectd ValueList object with metric information
     adjusted_time - The adjusted_time is the time adjusted according to storage resolution
     """
+    _LOGGER = get_logger(__name__)
     
     def __init__(self, config_helper, vl, adjusted_time=None):
         self.config = config_helper
@@ -123,14 +127,29 @@ class MetricDataBuilder(object):
         return dimensions
 
     def _build_metric_dimensions(self):
-        dimensions = {
-              "Host" : self._get_host_dimension(),
-              "PluginInstance" : self._get_plugin_instance_dimension()
-              }
-        if self.config.push_asg:
-            dimensions["AutoScalingGroup"] = self._get_autoscaling_group()
-        if self.config.push_constant:
-            dimensions["FixedDimension"] = self.config.constant_dimension_value
+        dimensions = {}
+        metadata = self._get_metadata()
+        if self.config.dimensions:
+            for dim in self.config.dimensions:
+                if dim.lower() == 'host':
+                    dimensions["Host"] = self._get_host_dimension()
+                elif dim.lower() == 'plugininstance':
+                    dimensions[dim] = self._get_plugin_instance_dimension()
+                else:
+                    dimensions[dim] = str(metadata.get(dim[:1].lower() + dim[1:]))
+            if self.config.push_asg:
+                dimensions["AutoScalingGroup"] = self._get_autoscaling_group()
+            if self.config.push_constant:
+                dimensions["FixedDimension"] = self.config.constant_dimension_value
+        else:
+            dimensions = {
+                    "Host" : self._get_host_dimension(),
+                    "PluginInstance" : self._get_plugin_instance_dimension(),
+                    }
+            if self.config.push_asg:
+                dimensions["AutoScalingGroup"] = self._get_autoscaling_group()
+            if self.config.push_constant:
+                dimensions["FixedDimension"] = self.config.constant_dimension_value
         return dimensions
 
     def _get_plugin_instance_dimension(self):
@@ -147,3 +166,25 @@ class MetricDataBuilder(object):
         if self.config.asg_name:
             return self.config.asg_name
         return "NONE"
+
+    def _get_metadata(self):
+        ## regarding commandlist below:
+            ## http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html
+	        ## Due to the dynamic nature of instance identity documents and signatures,
+        ## we recommend retrieving the instance identity document and signature regularly.
+        dimensionsList = []
+        url = "http://169.254.169.254/latest/dynamic/instance-identity/document"
+
+        req = urllib2.Request(url)
+        try:
+            response = urllib2.urlopen(req)
+        except urllib2.URLError as e:
+            if hasattr(e, 'reason'):
+                self._LOGGER.error("We failed to reach a server. Reason: " + e.reason)
+            elif hasattr(e, 'code'):
+                self._LOGGER.error("The server couldn't fulfill the request. Error code: " + e.code)
+        for line in response:
+            dimensionsList.append(line.rstrip())
+        output = "".join(dimensionsList)
+        instanceDimensions = json.loads(output)
+        return instanceDimensions
