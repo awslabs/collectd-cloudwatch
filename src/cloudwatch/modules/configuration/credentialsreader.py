@@ -22,10 +22,12 @@ class CredentialsReader(object):
     _LOGGER = get_logger(__name__)
     _ACCESS_CONFIG_KEY = "aws_access_key"
     _SECRET_CONFIG_KEY = "aws_secret_key"
+    _SECRET_TOKEN_KEY = "aws_token_key"
 
     #This is the format the SDK uses.
     _ACCESS_CONFIG_KEY_AWS_FORMAT = "aws_access_key_id"
     _SECRET_CONFIG_KEY_AWS_FORMAT = "aws_secret_access_key"
+    _SECRET_TOKEN_KEY_AWS_FORMAT = "aws_session_token"
 
     def __init__(self, creds_path):
         self.creds_path = creds_path
@@ -49,10 +51,13 @@ class CredentialsReader(object):
         secret_key = self.reader_utils.get_string(self._SECRET_CONFIG_KEY)
         if not secret_key:
              secret_key = self.reader_utils.get_string(self._SECRET_CONFIG_KEY_AWS_FORMAT)
+        token = self.reader_utils.get_string(self._SECRET_TOKEN_KEY)
+        if not token:
+            token = self.reader_utils.get_string(self._SECRET_TOKEN_KEY_AWS_FORMAT)
         if not access_key or not secret_key:
             raise CredentialsReaderException("Access key or secret key is missing in the credentials file.")
         if access_key and secret_key:
-            self.credentials = AWSCredentials(access_key, secret_key)
+            self.credentials = AWSCredentials(access_key, secret_key, token)
 
 
 class CredentialsReaderException(Exception):
