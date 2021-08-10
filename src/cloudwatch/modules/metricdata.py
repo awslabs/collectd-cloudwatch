@@ -27,8 +27,40 @@ class MetricDataStatistic(object):
             self.timestamp = timestamp
         else:
             self.timestamp = awsutils.get_aws_timestamp() 
+        self.ds_type = None
+        self.interval = None
+        self.last_update = None
+        self.last_value = None
         
-    def add_value(self, value):
+    def cumulative(self, ds_type=None, interval=None, last_update=None, last_value=None):
+        if ds_type:
+            self.ds_type = ds_type
+        if interval:
+            self.interval = interval
+        if last_update:
+            self.last_update = last_update
+        if last_value:
+            self.last_value = last_value
+
+    def add_value(self, value, time=None):
+
+        if self.ds_type in ['derive', 'counter']:
+            if self.last_update is None or self.last_value is None or \
+               self.interval and time - self.last_update > 2*self.interval or \
+               time - self.last_update == 0:
+                self.last_update, self.last_value = time, value
+                return
+
+            self.last_update, self.last_value, value = \
+                time, value, (value - self.last_value)/(time - self.last_update)
+            if self.ds_type == 'counter':
+                if value < 0:
+                    value += 2**32 - 1
+                if value < 0:
+                    value += 2**64 - 2**32
+        else:
+            self.last_update, self.last_value = time, value
+
         if not self.statistics:
             self.statistics = self.Statistics(value) 
         else:
@@ -83,6 +115,9 @@ class MetricDataBuilder(object):
         self.config = config_helper
         self.vl = vl
         self.adjusted_time = adjusted_time
+        self.ds_type = None
+        if vl.meta and 'ds_type' in vl.meta:
+            self.ds_type = vl.meta['ds_type']
 
     def build(self):
         """ Builds metric data object with name and dimensions but without value or statistics """
@@ -91,6 +126,9 @@ class MetricDataBuilder(object):
             metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_asg_dimension(), timestamp=self._build_timestamp()))
         if self.config.push_constant:
             metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
+        if self.ds_type:
+            for metric in metric_array:
+                metric.cumulative(ds_type=self.ds_type, interval=self.vl.interval)
         return metric_array
         
     def _build_timestamp(self):
