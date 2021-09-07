@@ -25,7 +25,7 @@ class EC2GetClient(object):
     _TOTAL_RETRIES = 1
 
     def __init__(self, config_helper, connection_timeout=_DEFAULT_CONNECTION_TIMEOUT, response_timeout=_DEFAULT_RESPONSE_TIMEOUT):
-        self.request_builder = EC2RequestBuilder(config_helper.credentials, config_helper.region)
+        self.request_builder = EC2RequestBuilder(config_helper.ec2_endpoint, config_helper.credentials, config_helper.region)
         self._validate_and_set_endpoint(config_helper.ec2_endpoint)
         self.timeout = (connection_timeout, response_timeout)
     

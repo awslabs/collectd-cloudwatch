@@ -12,13 +12,13 @@ class RequestBuilderTest(unittest.TestCase):
         self.region = "test_region"
         self.namespace = "test_namespace"
         self.credentials = AWSCredentials("access_key", "secret_key")
-        self.builder = RequestBuilder(self.credentials, self.region, "10")
+        self.builder = RequestBuilder("https://monitoring." + self.region + ".amazonaws.com/", self.credentials, self.region, "10")
         
     def test_get_host(self):
         self.assertEquals("monitoring." + self.region +".amazonaws.com", self.builder._get_host())
     
-    def test_get_host_for_localhost_region(self):
-        self.builder.region = "localhost"
+    def test_get_host_for_localhost_endpoint(self):
+        self.builder.endpoint = "http://localhost/"
         self.assertEquals("localhost", self.builder._get_host())
     
     def test_get_signed_headers(self):
@@ -54,7 +54,7 @@ class RequestBuilderTest(unittest.TestCase):
         self.assertTrue("X-Amz-SignedHeaders" in request)
         
     def test_create_signed_request_with_iam_role_has_token_parameter(self):
-        self.builder = RequestBuilder(AWSCredentials("access_key", "secret_key", "token"), self.region, "10")
+        self.builder = RequestBuilder("https://localhost/", AWSCredentials("access_key", "secret_key", "token"), self.region, "10")
         metric = MetricDataStatistic("test_metric", statistic_values=MetricDataStatistic.Statistics(20))
         request = self.builder.create_signed_request(self.namespace, [metric])
         self.assertTrue("X-Amz-Security-Token" in request)

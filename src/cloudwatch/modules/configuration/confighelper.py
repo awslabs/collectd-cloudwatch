@@ -139,7 +139,11 @@ class ConfigHelper(object):
                     " Using host information provided by Collectd.")
 
     def _set_ec2_endpoint(self):
-        """ Creates endpoint from region information """
+        """ Creates endpoint from region information (if the endpoint not explicitly set via ec2_endpoint_url) """
+        if self.config_reader.ec2_endpoint_url:
+            self.ec2_endpoint = self.config_reader.ec2_endpoint_url
+            return
+
         if self.region is "localhost":
             self.ec2_endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):
@@ -179,7 +183,11 @@ class ConfigHelper(object):
             self._LOGGER.warning("flush_interval_in_seconds in configuration is invalid: " + str(self.config_reader.flush_interval_in_seconds) + " use the default value: " + self.flush_interval_in_seconds)
 
     def _set_endpoint(self):
-        """ Creates endpoint from region information """
+        """ Creates endpoint from region information (if the endpoint not explicitly set via monitoring_endpoint_url) """
+        if self.config_reader.monitoring_endpoint_url:
+            self.endpoint = self.config_reader.monitoring_endpoint_url
+            return
+
         if self.region is "localhost":
             self.endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):

@@ -1,6 +1,9 @@
-from ..awsutils import get_aws_timestamp, get_datestamp
-from signer import Signer
+import re
+
 from querystringbuilder import QuerystringBuilder
+from signer import Signer
+from ..awsutils import get_aws_timestamp, get_datestamp
+
 
 class BaseRequestBuilder(object):
     """
@@ -17,7 +20,8 @@ class BaseRequestBuilder(object):
     _ALGORITHM = "AWS4-HMAC-SHA256"
     _V4_TERMINATOR = "aws4_request"
     
-    def __init__(self, credentials, region, service, action, api_version, enable_high_resolution_metrics=False):
+    def __init__(self, endpoint, credentials, region, service, action, api_version, enable_high_resolution_metrics=False):
+        self.endpoint = endpoint
         self.credentials = credentials
         self.region = region
         self.datestamp = None
@@ -62,3 +66,15 @@ class BaseRequestBuilder(object):
         if self.credentials.token:
             canonical_map["X-Amz-Security-Token"] = self.credentials.token
         return canonical_map
+
+    def _get_host(self):
+        """ Returns the endpoint's hostname derived from the endpoint """
+        match = re.search(r"http://(.*)/", self.endpoint)
+        if match:
+            return match.group(1)
+
+        match = re.search(r"https://(.*)/", self.endpoint)
+        if match:
+            return match.group(1)
+
+        raise ValueError("Cannot extract endpoint hostname")

@@ -13,8 +13,8 @@ class RequestBuilder(BaseRequestBuilder):
     _ACTION = "PutMetricData"
     _API_VERSION = "2010-08-01"
     
-    def __init__(self, credentials, region, enable_high_resolution_metrics):
-        super(self.__class__, self).__init__(credentials, region, self._SERVICE, self._ACTION, self._API_VERSION, enable_high_resolution_metrics)
+    def __init__(self, endpoint, credentials, region, enable_high_resolution_metrics):
+        super(self.__class__, self).__init__(endpoint, credentials, region, self._SERVICE, self._ACTION, self._API_VERSION, enable_high_resolution_metrics)
         self.namespace = ""
 
     def create_signed_request(self, namespace, metric_list):
@@ -44,11 +44,3 @@ class RequestBuilder(BaseRequestBuilder):
         if (self.namespace):
             canonical_map["Namespace"] = self.namespace
         return canonical_map
-    
-    def _get_host(self):
-        """ Returns the endpoint's hostname derived from the region """
-        if self.region == "localhost":
-            return "localhost"
-        elif self.region.startswith("cn-"):
-            return "monitoring." + self.region + ".amazonaws.com.cn"
-        return "monitoring." + self.region + ".amazonaws.com"

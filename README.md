@@ -22,6 +22,8 @@ The default location of the configuration file used by collectd-cloudwatch plugi
  * __credentials_path__ - Used to point to AWS account configuration file
  * __region__ - Manual override for [region](http://docs.aws.amazon.com/general/latest/gr/rande.html#cw_region)  used to publish metrics
  * __host__ - Manual override for EC2 Instance ID and Host information propagated by collectd
+ * __ec2_endpoint_url__ - Manual override for EC2 endpoint
+ * __monitoring_endpoint_url__ - Manual override for Monitoring endpoint
  * __proxy_server_name__ - Manual override for proxy server name, used by plugin to connect aws cloudwatch at *.amazonaws.com.
  * __proxy_server_port__ - Manual override for proxy server port, used by plugin to connect aws cloudwatch at *.amazonaws.com.
  * __enable_high_resolution_metrics__ - The storage resolution is for high resolution support
