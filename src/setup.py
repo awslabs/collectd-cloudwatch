@@ -67,6 +67,7 @@ DISTRIBUTION_TO_INSTALLER = {
     "Amazon Linux AMI": YUM_INSTALL_COMMAND,
     "Amazon Linux": YUM_INSTALL_COMMAND,
     "CentOS Linux": YUM_INSTALL_COMMAND,
+    "Raspbian GNU": APT_INSTALL_COMMAND,
 }
 
 def is_pip_installed():
