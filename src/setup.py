@@ -33,15 +33,7 @@ from tempfile import gettempdir
 ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H_%M"
-GITHUB_USER_NAME = "awslabs"
-GITHUB_REPO_BRANCH = "master"
-TAR_FILE = GITHUB_USER_NAME + "-collectd-cloudwatch.tar.gz"
-DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
 DEFAULT_PLUGIN_CONFIGURATION_DIR = "/opt/collectd-plugins/cloudwatch/config"
-NEW_PLUGIN_FILES = DOWNLOAD_PLUGIN_DIR + "/src/*"
-RECOMMENDED_COLLECTD_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd.conf"
-RECOMMENDED_WHITELIST = DOWNLOAD_PLUGIN_DIR + "/resources/whitelist.conf"
-PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudwatch.conf"
 PLUGIN_CONFIGURATION_INCLUDE_LINE = 'Include "/etc/collectd-cloudwatch.conf"\r\n'
 APT_INSTALL_COMMAND = "apt-get install -y "
 YUM_INSTALL_COMMAND = "yum install -y "
@@ -804,16 +796,9 @@ def main():
     COLLECTD_INFO = get_collectd_info()
     STOP_COLLECTD_CMD = CMD("pkill collectd", "Stopping collectd process")
     START_COLLECTD_CMD = CMD(COLLECTD_INFO.exec_path, "Starting collectd process")
-    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/" + GITHUB_USER_NAME + "/collectd-cloudwatch/tarball/" + GITHUB_REPO_BRANCH + " > " + TAR_FILE, "Downloading plugin")
-    UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
     COPY_CMD = "\cp -rf {source} {target}"
-    COPY_PLUGIN_CMD = CMD(COPY_CMD.format(source=NEW_PLUGIN_FILES, target=CollectdInfo.PLUGINS_DIR), "Moving to collectd plugins directory")
-    COPY_PLUGIN_INCLUDE_FILE_CMD = CMD(COPY_CMD.format(source=PLUGIN_INCLUDE_CONFIGURATION, target="/etc/"), "Copying CloudWatch plugin include file")
-    COPY_RECOMMENDED_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_COLLECTD_CONFIGURATION, target=COLLECTD_INFO.config_path), "Replacing collectd configuration")
     BACKUP_COLLECTD_CONFIG_CMD = CMD(COPY_CMD.format(source=COLLECTD_INFO.config_path, target=COLLECTD_INFO.config_path + "." + time.strftime(TIMESTAMP_FORMAT)),
-                                 "Creating backup of the original configuration")
-    REPLACE_WHITELIST_CMD = CMD(COPY_CMD.format(source=RECOMMENDED_WHITELIST, target=DEFAULT_PLUGIN_CONFIGURATION_DIR), "Replacing whitelist configuration")
-
+                                     "Creating backup of the original configuration")
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description='Script for custom installation process for collectd AWS CloudWatch plugin'
@@ -897,6 +882,14 @@ def main():
         '-D', '--debug_setup', default=False,
         action='store_true', help='Provides verbose logging during setup process'
     )
+    parser.add_argument(
+        '-u', '--github_username', required=False, default="awslabs",
+        help='Overrides a username of source repository'
+    )
+    parser.add_argument(
+        '-b', '--github_repo_branch', required=False, default="master",
+        help='Overrides a branch of source repository'
+    )
     args = parser.parse_args()
 
     if args.proxy_port is None and args.proxy_name or args.proxy_port and args.proxy_name is None:
@@ -928,6 +921,40 @@ def main():
     dimension_value = args.dimension_value
     debug_setup = args.debug_setup
     debug = args.debug
+
+    def set_github_repository(github_username, github_repo_branch):
+        GITHUB_USER_NAME = github_username
+        GITHUB_REPO_BRANCH = github_repo_branch
+        TAR_FILE = GITHUB_USER_NAME + "-collectd-cloudwatch.tar.gz"
+        DOWNLOAD_PLUGIN_DIR = GITHUB_USER_NAME + "-collectd-cloudwatch*"
+        NEW_PLUGIN_FILES = DOWNLOAD_PLUGIN_DIR + "/src/*"
+        RECOMMENDED_COLLECTD_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd.conf"
+        RECOMMENDED_WHITELIST = DOWNLOAD_PLUGIN_DIR + "/resources/whitelist.conf"
+        PLUGIN_INCLUDE_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd-cloudwatch.conf"
+        DOWNLOAD_PLUGIN_CMD = CMD(
+            "curl -sL https://github.com/" + GITHUB_USER_NAME + "/collectd-cloudwatch/tarball/" + GITHUB_REPO_BRANCH + " > " + TAR_FILE,
+            "Downloading plugin")
+        UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
+        COPY_PLUGIN_CMD = CMD(COPY_CMD.format(source=NEW_PLUGIN_FILES, target=CollectdInfo.PLUGINS_DIR),
+                              "Moving to collectd plugins directory")
+        COPY_PLUGIN_INCLUDE_FILE_CMD = CMD(COPY_CMD.format(source=PLUGIN_INCLUDE_CONFIGURATION, target="/etc/"),
+                                           "Copying CloudWatch plugin include file")
+        COPY_RECOMMENDED_COLLECTD_CONFIG_CMD = CMD(
+            COPY_CMD.format(source=RECOMMENDED_COLLECTD_CONFIGURATION, target=COLLECTD_INFO.config_path),
+            "Replacing collectd configuration")
+        REPLACE_WHITELIST_CMD = CMD(
+            COPY_CMD.format(source=RECOMMENDED_WHITELIST, target=DEFAULT_PLUGIN_CONFIGURATION_DIR),
+            "Replacing whitelist configuration")
+        return (
+            TAR_FILE, DOWNLOAD_PLUGIN_DIR, NEW_PLUGIN_FILES, RECOMMENDED_COLLECTD_CONFIGURATION, RECOMMENDED_WHITELIST,
+            PLUGIN_INCLUDE_CONFIGURATION, DOWNLOAD_PLUGIN_CMD, UNTAR_PLUGIN_CMD, COPY_PLUGIN_CMD,
+            COPY_PLUGIN_INCLUDE_FILE_CMD, COPY_RECOMMENDED_COLLECTD_CONFIG_CMD, REPLACE_WHITELIST_CMD
+        )
+
+    (TAR_FILE, DOWNLOAD_PLUGIN_DIR, NEW_PLUGIN_FILES, RECOMMENDED_COLLECTD_CONFIGURATION, RECOMMENDED_WHITELIST,
+     PLUGIN_INCLUDE_CONFIGURATION, DOWNLOAD_PLUGIN_CMD, UNTAR_PLUGIN_CMD, COPY_PLUGIN_CMD,
+     COPY_PLUGIN_INCLUDE_FILE_CMD, COPY_RECOMMENDED_COLLECTD_CONFIG_CMD,
+     REPLACE_WHITELIST_CMD) = set_github_repository(args.github_username, args.github_repo_branch)
 
     def install_plugin():
         try:
