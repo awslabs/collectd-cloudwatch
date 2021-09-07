@@ -57,18 +57,18 @@ We support adding both the ASG name to dimensions, as well as a "fixed dimension
     push_constant = True
     constant_dimension_value = "MyConstantValueHere"
 
-The above configuration will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
+The above configuration will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere".
 
 ###### Example configuration file
     push_constant = True
     constant_dimension_value = "MyConstantValueHere"
 
-The above configuration will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere"
+The above configuration will result in all metrics being pushed with "FixedDimension" : "MyConstantValueHere".
 
 ###### Example configuration file
-    push_asg = False
+    push_asg = True
 
-The above configuration will push the AutoScaling Group name for metrics as well
+The above configuration will push the AutoScaling Group name for metrics as well.
 
 ### AWS account configuration
 The account configuration is optional for EC2 instances with IAM Role attached. By default the AWS account configuration file is expected to be stored in: `/opt/collectd-plugins/cloudwatch/config/.aws/credentials`.
