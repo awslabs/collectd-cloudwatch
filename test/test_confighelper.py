@@ -20,6 +20,8 @@ class ConfigHelperTest(unittest.TestCase):
     VALID_CONFIG_WITH_PASS_THROUGH_DISABLED = CONFIG_DIR + "valid_config_with_pass_through_disabled"
     VALID_CONFIG_WITH_PROXY_SERVER_NAME = CONFIG_DIR + "valid_config_with_proxy_server_name"
     VALID_CONFIG_WITH_PROXY_SERVER_PORT = CONFIG_DIR + "valid_config_with_proxy_server_port"
+    VALID_CONFIG_WITH_ENDPOINT_OVERRIDES = CONFIG_DIR + "valid_config_with_endpoint_overrides"
+    VALID_CONFIG_WITH_CA_BUNDLE_PATH = CONFIG_DIR + "valid_config_with_ca_bundle_path"
     VALID_CONFIG_WITHOUT_CREDS = CONFIG_DIR + "valid_config_without_creds"
     VALID_CREDENTIALS_FILE = CONFIG_DIR + "valid_credentials_file"
     MISSING_CONFIG = CONFIG_DIR + "no_config"
@@ -35,6 +37,9 @@ class ConfigHelperTest(unittest.TestCase):
     VALID_PROXY_SERVER_PORT = "server_port"
     VALID_ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
     VALID_FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
+    VALID_EC2_ENDPOINT_OVERRIDE = "https://valid.url"
+    VALID_MONITORING_ENDPOINT_OVERRIDE = "https://valid.url"
+    VALID_CA_BUNDLE_PATH = "/path/to/bundle.pem"
 
     FAKE_SERVER = None
     
@@ -191,6 +196,15 @@ class ConfigHelperTest(unittest.TestCase):
         ConfigHelper._DEFAULT_CREDENTIALS_PATH = ""
         self.config_helper = ConfigHelper(config_path=ConfigHelperTest.VALID_CONFIG_WITHOUT_CREDS,metadata_server=self.server.get_url())
         assert_credentials(self.config_helper._credentials, expected_access, expected_secret, expected_token)
+
+    def test_endpoint_overrides(self):
+        self.config_helper = ConfigHelper(config_path=self.VALID_CONFIG_WITH_ENDPOINT_OVERRIDES)
+        self.assertEquals(self.VALID_EC2_ENDPOINT_OVERRIDE, self.config_helper.ec2_endpoint)
+        self.assertEquals(self.VALID_MONITORING_ENDPOINT_OVERRIDE, self.config_helper.endpoint)
+
+    def test_ca_bundle_path(self):
+       self.config_helper = ConfigHelper(config_path=self.VALID_CONFIG_WITH_CA_BUNDLE_PATH)
+       self.assertEquals(self.VALID_CA_BUNDLE_PATH, self.config_helper.ca_bundle_path)
 
     def _update_and_assert_iam_role_credentials(self, json, expected_access, expected_secret, expected_token):
         self.server.set_expected_response(json, 200)

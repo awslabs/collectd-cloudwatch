@@ -49,6 +49,7 @@ class ConfigHelper(object):
         self.constant_dimension_value = ''
         self.enable_high_resolution_metrics = False
         self.flush_interval_in_seconds = ''
+        self.ca_bundle_path = ''
         self._load_configuration()
         self.whitelist = Whitelist(WhitelistConfigReader(self.WHITELIST_CONFIG_PATH, self.pass_through).get_regex_list(), self.BLOCKED_METRIC_PATH)
 
@@ -83,6 +84,7 @@ class ConfigHelper(object):
         self._load_flush_interval_in_seconds()
         self._set_endpoint()
         self._set_ec2_endpoint()
+        self.ca_bundle_path = self.config_reader.ca_bundle_path
         self._load_autoscaling_group()
         self.debug = self.config_reader.debug
         self.pass_through = self.config_reader.pass_through
@@ -140,7 +142,9 @@ class ConfigHelper(object):
 
     def _set_ec2_endpoint(self):
         """ Creates endpoint from region information """
-        if self.region is "localhost":
+        if self.config_reader.ec2_endpoint_override:
+            self.ec2_endpoint = self.config_reader.ec2_endpoint_override
+        elif self.region is "localhost":
             self.ec2_endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com.cn/"
@@ -180,7 +184,9 @@ class ConfigHelper(object):
 
     def _set_endpoint(self):
         """ Creates endpoint from region information """
-        if self.region is "localhost":
+        if self.config_reader.monitoring_endpoint_override:
+            self.endpoint = self.config_reader.monitoring_endpoint_override
+        elif self.region is "localhost":
             self.endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):
             self.endpoint = "https://monitoring." + self.region + ".amazonaws.com.cn/"

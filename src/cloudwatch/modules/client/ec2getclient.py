@@ -25,8 +25,14 @@ class EC2GetClient(object):
     _TOTAL_RETRIES = 1
 
     def __init__(self, config_helper, connection_timeout=_DEFAULT_CONNECTION_TIMEOUT, response_timeout=_DEFAULT_RESPONSE_TIMEOUT):
-        self.request_builder = EC2RequestBuilder(config_helper.credentials, config_helper.region)
+        host_override = config_helper.ec2_endpoint
+        host_override = host_override.replace("https://", "")
+        host_override = host_override.replace("http://", "")
+        if host_override.endswith('/'):
+            host_override = host_override[:-1]
+        self.request_builder = EC2RequestBuilder(config_helper.credentials, config_helper.region, host_override)
         self._validate_and_set_endpoint(config_helper.ec2_endpoint)
+        self.ca_bundle_path = config_helper.ca_bundle_path
         self.timeout = (connection_timeout, response_timeout)
     
     def _validate_and_set_endpoint(self, endpoint):
@@ -65,6 +71,8 @@ class EC2GetClient(object):
         session = Session()
         session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
+        if self.ca_bundle_path:
+            session.verify = self.ca_bundle_path
         result = session.get(self.endpoint + "?" + request, headers=self._get_custom_headers(), timeout=self.timeout)
         result.raise_for_status()
         return result
