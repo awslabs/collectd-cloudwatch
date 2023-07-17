@@ -17,6 +17,8 @@ class ConfigReaderTest(unittest.TestCase):
     VALID_CONFIG_WITH_PROXY_SERVER_PORT = CONFIG_DIR + "valid_config_with_proxy_server_port"
     VALID_CONFIG_WITH_PASS_THROUGH_ENABLED = CONFIG_DIR + "valid_config_with_pass_through_enabled"
     VALID_CONFIG_WITH_PASS_THROUGH_DISABLED = CONFIG_DIR + "valid_config_with_pass_through_disabled"
+    VALID_CONFIG_WITH_ENDPOINT_OVERRIDES = CONFIG_DIR + "valid_config_with_endpoint_overrides"
+    VALID_CONFIG_WITH_CA_BUNDLE_PATH = CONFIG_DIR + "valid_config_with_ca_bundle_path"
     INVALID_CONFIG_WITH_UNKNOWN_PARAMETER = CONFIG_DIR + "invalid_config_with_unknown_parameters"
     INVALID_CONFIG_WITH_SYNTAX_ERROR = CONFIG_DIR + "invalid_config_with_syntax_error"
     INVALID_CONFIG_WITH_SINGLE_KEY_MISSING = CONFIG_DIR + "invalid_config_full_with_single_key_missing"
@@ -28,7 +30,10 @@ class ConfigReaderTest(unittest.TestCase):
     VALID_PUSH_ASG_AND_CONSTANT = CONFIG_DIR + "valid_config_push_constant_and_asg"
     VALID_PROXY_SERVER_NAME = "server_name"
     VALID_PROXY_SERVER_PORT = "server_port"
-    
+    VALID_EC2_ENDPOINT_OVERRIDE = "https://valid.url"
+    VALID_MONITORING_ENDPOINT_OVERRIDE = "https://valid.url"
+    VALID_CA_BUNDLE_PATH = "/path/to/bundle.pem"
+
     def setUp(self):
         self.config_reader = None
         self.logger = MagicMock()
@@ -63,7 +68,16 @@ class ConfigReaderTest(unittest.TestCase):
         self.assertFalse(self.config_reader.debug)
         self.assertEquals(self.VALID_PROXY_SERVER_NAME, self.config_reader.proxy_server_name)
         self.assertEquals(self.VALID_PROXY_SERVER_PORT, self.config_reader.proxy_server_port)
-    
+
+    def test_endpoint_overrides(self):
+        self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_ENDPOINT_OVERRIDES)
+        self.assertEquals(self.VALID_EC2_ENDPOINT_OVERRIDE, self.config_reader.ec2_endpoint_override)
+        self.assertEquals(self.VALID_MONITORING_ENDPOINT_OVERRIDE, self.config_reader.monitoring_endpoint_override)
+
+    def test_ca_bundle(self):
+        self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_CA_BUNDLE_PATH)
+        self.assertEquals(self.VALID_CA_BUNDLE_PATH, self.config_reader.ca_bundle_path)
+
     def test_valid_config_with_debug_enabled(self):
         self.config_reader = ConfigReader(self.VALID_CONFIG_WITH_DEBUG_ENABLED)
         self.assertTrue(self.config_reader.debug)

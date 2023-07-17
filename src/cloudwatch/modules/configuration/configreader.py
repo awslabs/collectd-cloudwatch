@@ -39,6 +39,9 @@ class ConfigReader(object):
     PROXY_SERVER_PORT_KEY = "proxy_server_port"
     ENABLE_HIGH_DEFINITION_METRICS = "enable_high_resolution_metrics"
     FLUSH_INTERVAL_IN_SECONDS = "flush_interval_in_seconds"
+    MONITORING_ENDPOINT_OVERRIDE_KEY = "monitoring_endpoint_override"
+    EC2_ENDPOINT_OVERRIDE_KEY = "ec2_endpoint_override"
+    CA_BUNDLE_PATH_KEY = "ca_bundle_path"
 
     def __init__(self, config_path):
         self.config_path = config_path
@@ -54,6 +57,9 @@ class ConfigReader(object):
         self.proxy_server_port = ''
         self.enable_high_resolution_metrics = self._ENABLE_HIGH_DEFINITION_METRICS_DEFAULT_VALUE
         self.flush_interval_in_seconds = ''
+        self.monitoring_endpoint_override = ''
+        self.ec2_endpoint_override = ''
+        self.ca_bundle_path = ''
         try:
             self.reader_utils = ReaderUtils(config_path)
             self._parse_config_file()
@@ -78,3 +84,6 @@ class ConfigReader(object):
         self.push_asg = self.reader_utils.try_get_boolean(self.PUSH_ASG_KEY, self._PUSH_ASG_DEFAULT_VALUE)
         self.push_constant = self.reader_utils.try_get_boolean(self.PUSH_CONSTANT_KEY, self._PUSH_CONSTANT_DEFAULT_VALUE)
         self.constant_dimension_value = self.reader_utils.get_string(self.CONSTANT_DIMENSION_KEY)
+        self.monitoring_endpoint_override = self.reader_utils.get_string(self.MONITORING_ENDPOINT_OVERRIDE_KEY)
+        self.ec2_endpoint_override = self.reader_utils.get_string(self.EC2_ENDPOINT_OVERRIDE_KEY)
+        self.ca_bundle_path = self.reader_utils.get_string(self.CA_BUNDLE_PATH_KEY)

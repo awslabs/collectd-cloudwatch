@@ -29,13 +29,19 @@ class PutClient(object):
     _LOG_FILE_MAX_SIZE = 10*1024*1024
 
     def __init__(self, config_helper, connection_timeout=_DEFAULT_CONNECTION_TIMEOUT, response_timeout=_DEFAULT_RESPONSE_TIMEOUT):
-        self.request_builder = RequestBuilder(config_helper.credentials, config_helper.region, config_helper.enable_high_resolution_metrics)
+        host_override = config_helper.endpoint
+        host_override = host_override.replace("https://", "")
+        host_override = host_override.replace("http://", "")
+        if host_override.endswith('/'):
+            host_override = host_override[:-1]
+        self.request_builder = RequestBuilder(config_helper.credentials, config_helper.region, config_helper.enable_high_resolution_metrics, host_override)
         self._validate_and_set_endpoint(config_helper.endpoint)
         self.timeout = (connection_timeout, response_timeout)
         self.proxy_server_name = config_helper.proxy_server_name
         self.proxy_server_port = config_helper.proxy_server_port
         self.debug = config_helper.debug
         self.config = config_helper
+        self.ca_bundle_path = config_helper.ca_bundle_path
         self._prepare_session()
 
     def _prepare_session(self):
@@ -52,6 +58,8 @@ class PutClient(object):
             self._LOGGER.info("No proxy server is in use")
         self.session.mount("http://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
         self.session.mount("https://", HTTPAdapter(max_retries=self._TOTAL_RETRIES))
+        if self.ca_bundle_path:
+            self.session.verify = self.ca_bundle_path
 
     def _validate_and_set_endpoint(self, endpoint):
         pattern = re.compile("http[s]?://*/")

@@ -1,0 +1,2 @@
+ec2_endpoint_override = https://valid.url
+monitoring_endpoint_override = https://valid.url

@@ -13,8 +13,9 @@ class EC2RequestBuilder(BaseRequestBuilder):
     _ACTION = "DescribeTags"
     _API_VERSION = "2016-11-15"
     
-    def __init__(self, credentials, region):
+    def __init__(self, credentials, region, host_override=''):
         super(self.__class__, self).__init__(credentials, region, self._SERVICE, self._ACTION, self._API_VERSION)
+        self.host_override = host_override
     
     def create_signed_request(self, request_map):
         """ Creates a ready to send request with metrics from the metric list passed as parameter """
@@ -35,7 +36,9 @@ class EC2RequestBuilder(BaseRequestBuilder):
     
     def _get_host(self):
         """ Returns the endpoint's hostname derived from the region """
-        if self.region == "localhost":
+        if self.host_override:
+            return self.host_override
+        elif self.region == "localhost":
             return "localhost"
         elif self.region.startswith("cn-"):
             return "ec2." + self.region + ".amazonaws.com.cn"

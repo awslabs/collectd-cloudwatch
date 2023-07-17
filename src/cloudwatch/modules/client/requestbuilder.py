@@ -13,9 +13,10 @@ class RequestBuilder(BaseRequestBuilder):
     _ACTION = "PutMetricData"
     _API_VERSION = "2010-08-01"
     
-    def __init__(self, credentials, region, enable_high_resolution_metrics):
+    def __init__(self, credentials, region, enable_high_resolution_metrics, host_override=''):
         super(self.__class__, self).__init__(credentials, region, self._SERVICE, self._ACTION, self._API_VERSION, enable_high_resolution_metrics)
         self.namespace = ""
+        self.host_override = host_override
 
     def create_signed_request(self, namespace, metric_list):
         """ Creates a ready to send request with metrics from the metric list passed as parameter """
@@ -47,7 +48,9 @@ class RequestBuilder(BaseRequestBuilder):
     
     def _get_host(self):
         """ Returns the endpoint's hostname derived from the region """
-        if self.region == "localhost":
+        if self.host_override:
+            return self.host_override
+        elif self.region == "localhost":
             return "localhost"
         elif self.region.startswith("cn-"):
             return "monitoring." + self.region + ".amazonaws.com.cn"
