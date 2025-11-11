@@ -144,6 +144,8 @@ class ConfigHelper(object):
             self.ec2_endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com.cn/"
+        elif self.region.startswith("eusc-"):
+            self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.eu/"
         else:
             self.ec2_endpoint = "https://ec2." + self.region + ".amazonaws.com/"
 
@@ -184,6 +186,8 @@ class ConfigHelper(object):
             self.endpoint = "http://" + self.region + "/"
         elif self.region.startswith("cn-"):
             self.endpoint = "https://monitoring." + self.region + ".amazonaws.com.cn/"
+        elif self.region.startswith("eusc-"):
+            self.endpoint = "https://monitoring." + self.region + ".amazonaws.eu/"
         else:
             self.endpoint = "https://monitoring." + self.region + ".amazonaws.com/"
 

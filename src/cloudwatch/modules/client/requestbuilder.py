@@ -51,4 +51,6 @@ class RequestBuilder(BaseRequestBuilder):
             return "localhost"
         elif self.region.startswith("cn-"):
             return "monitoring." + self.region + ".amazonaws.com.cn"
+        elif self.region.startswith("eusc-"):
+            return "monitoring." + self.region + ".amazonaws.eu"
         return "monitoring." + self.region + ".amazonaws.com"

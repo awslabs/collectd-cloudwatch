@@ -39,4 +39,6 @@ class EC2RequestBuilder(BaseRequestBuilder):
             return "localhost"
         elif self.region.startswith("cn-"):
             return "ec2." + self.region + ".amazonaws.com.cn"
+        elif self.region.startswith("eusc-"):
+            return "ec2." + self.region + ".amazonaws.eu"
         return "ec2." + self.region + ".amazonaws.com"
